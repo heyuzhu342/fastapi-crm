@@ -1,0 +1,41 @@
+{% extends "layouts/base.html" %}
+{% block title %}合同管理 — FastAPI CRM{% endblock %}
+{% block page_title %}合同管理{% endblock %}
+{% block breadcrumb_active %}合同列表{% endblock %}
+{% block page_actions %}
+<a href="/contracts/create" class="btn btn-primary"><i class="ti ti-plus me-1"></i> 新建合同</a>
+{% endblock %}
+{% block content %}
+<div class="card"><div class="table-responsive">
+<table class="table table-vcenter card-table table-hover">
+    <thead><tr><th>合同编号</th><th>合同名称</th><th>客户</th><th>金额</th><th>状态</th><th>签署日期</th><th>时间</th><th></th></tr></thead>
+    <tbody id="tbody"><tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr></tbody>
+</table></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const API = '/api/v1/contracts';
+const statusBadge = {draft:'bg-secondary',pending_approval:'bg-yellow',active:'bg-success',completed:'bg-blue',terminated:'bg-danger',expired:'bg-warning'};
+const statusLabel = {draft:'草稿',pending_approval:'待审批',active:'生效中',completed:'已完成',terminated:'已终止',expired:'已过期'};
+
+(async function(){
+    const res = await fetch(API, {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
+    const d = (await res.json());
+    const tbody = document.getElementById('tbody');
+    if (!d.data.length) {
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon"><i class="ti ti-file-text"></i></div><h3>暂无合同</h3></div></td></tr>';
+    } else {
+        tbody.innerHTML = d.data.map(c => `<tr>
+            <td><a href="/contracts/${c.id}" class="fw-medium">${c.contract_no}</a></td>
+            <td>${escapeHtml(c.name)}</td>
+            <td>${c.customer_name||'—'}</td>
+            <td class="text-success fw-medium">${formatCurrency(c.amount)}</td>
+            <td><span class="badge ${statusBadge[c.status]||'bg-secondary'}">${statusLabel[c.status]||c.status}</span></td>
+            <td>${c.signed_date||'—'}</td>
+            <td class="text-muted">${formatDate(c.created_at)}</td>
+            <td><a href="/contracts/${c.id}/edit" class="btn btn-sm btn-icon"><i class="ti ti-edit"></i></a></td>
+        </tr>`).join('');
+    }
+})();
+</script>
+{% endblock %}

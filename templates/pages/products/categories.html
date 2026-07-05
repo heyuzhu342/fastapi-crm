@@ -1,0 +1,39 @@
+{% extends "layouts/base.html" %}
+{% block title %}产品分类 — CRM{% endblock %}
+{% block page_title %}产品分类{% endblock %}
+{% block breadcrumb_active %}产品管理 / 分类{% endblock %}
+{% block page_actions %}<button class="btn btn-primary" onclick="createCat()"><i class="ti ti-plus me-1"></i>新建分类</button>{% endblock %}
+{% block content %}
+<div class="card"><div class="table-responsive">
+<table class="table table-vcenter card-table"><thead><tr><th>名称</th><th>排序</th><th>状态</th><th>操作</th></tr></thead>
+<tbody id="tbody"><tr><td colspan="4" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr></tbody>
+</table></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const API = '/api/v1/products/categories';
+async function load(){
+    const res = await fetch(API+'/tree', {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
+    const cats = (await res.json()).data || [];
+    function flatten(list, prefix=''){
+        let rows = '';
+        list.forEach(c => {
+            rows += `<tr><td><span class="fw-medium">${prefix}${escapeHtml(c.name)}</span></td>
+                <td>${c.sort}</td><td>${c.is_active?'<span class="badge bg-success">启用</span>':'<span class="badge bg-secondary">禁用</span>'}</td>
+                <td><a href="#" class="text-danger" onclick="del(${c.id})">删除</a></td></tr>`;
+            if (c.children) rows += flatten(c.children, prefix+'├ ');
+        });
+        return rows;
+    }
+    document.getElementById('tbody').innerHTML = flatten(cats) || '<tr><td colspan="4" class="text-muted text-center">暂无分类</td></tr>';
+}
+async function createCat(){
+    const name = prompt('分类名称:');
+    if (!name) return;
+    await fetch(API, {method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('access_token')}, body:JSON.stringify({name, sort:0})});
+    load();
+}
+async function del(id){ if (!confirm('确定删除？')) return; await fetch(API+'/'+id, {method:'DELETE', headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}}); load(); }
+load();
+</script>
+{% endblock %}

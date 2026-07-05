@@ -1,0 +1,176 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}仪表盘 — FastAPI CRM{% endblock %}
+{% block page_title %}仪表盘{% endblock %}
+{% block breadcrumb_active %}数据概览{% endblock %}
+
+{% block page_actions %}
+<div class="btn-list">
+    <a href="/customers/create" class="btn btn-primary d-none d-sm-inline-block">
+        <i class="ti ti-plus me-1"></i> 添加客户
+    </a>
+    <a href="/leads/create" class="btn btn-outline-primary d-none d-sm-inline-block">
+        <i class="ti ti-user-search me-1"></i> 录入线索
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- 统计卡片 -->
+<div class="row row-deck row-cards mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="subheader">客户总数</div>
+                <div class="h1 mb-3" id="stat-customers">—</div>
+                <div class="text-muted"><a href="/customers">查看全部 <i class="ti ti-arrow-right"></i></a></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="subheader">活跃线索</div>
+                <div class="h1 mb-3" id="stat-leads">—</div>
+                <div class="text-muted"><a href="/leads">查看全部 <i class="ti ti-arrow-right"></i></a></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="subheader">进行中商机</div>
+                <div class="h1 mb-3" id="stat-opps">—</div>
+                <div><span class="text-success" id="stat-opp-amount">¥ 0</span> 预计</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="subheader">待处理工单</div>
+                <div class="h1 mb-3" id="stat-tickets">—</div>
+                <div class="text-muted"><a href="/tickets">查看全部 <i class="ti ti-arrow-right"></i></a></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 图表 + 最近 -->
+<div class="row row-deck row-cards mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">销售趋势 (近6个月)</h3></div>
+            <div class="card-body"><canvas id="sales-chart" height="240"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">销售漏斗</h3></div>
+            <div class="card-body"><canvas id="funnel-chart" height="240"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- 最近活动 -->
+<div class="row row-deck row-cards">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">最近客户</h3></div>
+            <div class="list-group list-group-flush overflow-auto" style="max-height:20rem" id="recent-customers">
+                <div class="list-group-item text-center text-muted py-4">加载中...</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">最近商机</h3></div>
+            <div class="list-group list-group-flush overflow-auto" style="max-height:20rem" id="recent-opps">
+                <div class="list-group-item text-center text-muted py-4">加载中...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    // 加载统计数字
+    const statsRes = await fetch('/api/v1/dashboard/stats', {
+        headers: {'Authorization': 'Bearer ' + localStorage.getItem('access_token')}
+    });
+    const stats = (await statsRes.json()).data || {};
+    document.getElementById('stat-customers').textContent = stats.customer_count || 0;
+    document.getElementById('stat-leads').textContent = stats.lead_count || 0;
+    document.getElementById('stat-opps').textContent = stats.opportunity_count || 0;
+    document.getElementById('stat-opp-amount').textContent = '¥ ' + (stats.opportunity_amount || 0).toLocaleString();
+    document.getElementById('stat-tickets').textContent = stats.ticket_count || 0;
+
+    // 加载最近客户
+    const custRes = await fetch('/api/v1/customers?page_size=5&sort_by=created_at&order=desc', {
+        headers: {'Authorization': 'Bearer ' + localStorage.getItem('access_token')}
+    });
+    const customers = (await custRes.json()).data || [];
+    document.getElementById('recent-customers').innerHTML = customers.length
+        ? customers.map(c => `<div class="list-group-item"><div class="row align-items-center">
+            <div class="col text-truncate"><a href="/customers/${c.id}" class="text-body d-block">${escapeHtml(c.name)}</a>
+            <small class="text-muted">${c.industry||'—'} · ${c.city||'—'}</small></div>
+            <div class="col-auto"><span class="badge ${c.status==='active'?'bg-success':'bg-secondary'}">${c.status}</span></div>
+        </div></div>`).join('')
+        : '<div class="list-group-item text-center text-muted py-4"><i class="ti ti-building icon-lg"></i><div>暂无客户</div></div>';
+
+    // 加载最近商机
+    const oppRes = await fetch('/api/v1/opportunities?page_size=5&sort_by=created_at&order=desc', {
+        headers: {'Authorization': 'Bearer ' + localStorage.getItem('access_token')}
+    });
+    const opps = (await oppRes.json()).data || [];
+    const stageLabel = {initial_contact:'初步接触',needs_analysis:'需求分析',quotation:'报价',negotiation:'谈判',won:'成交',lost:'丢单'};
+    document.getElementById('recent-opps').innerHTML = opps.length
+        ? opps.map(o => `<div class="list-group-item"><div class="row align-items-center">
+            <div class="col text-truncate"><span class="text-body d-block">${escapeHtml(o.name)}</span>
+            <small class="text-muted">${stageLabel[o.stage]||o.stage} · ${o.probability}%</small></div>
+            <div class="col-auto text-success fw-medium">${formatCurrency(o.amount)}</div>
+        </div></div>`).join('')
+        : '<div class="list-group-item text-center text-muted py-4"><i class="ti ti-target-arrow icon-lg"></i><div>暂无商机</div></div>';
+
+    // 加载漏斗数据
+    const funnelRes = await fetch('/api/v1/opportunities/funnel', {
+        headers: {'Authorization': 'Bearer ' + localStorage.getItem('access_token')}
+    });
+    const funnel = (await funnelRes.json()).data || [];
+
+    // 销售趋势图 (用演示数据 + 实际月度收入)
+    const trendsRes = await fetch('/api/v1/dashboard/trends', {
+        headers: {'Authorization': 'Bearer ' + localStorage.getItem('access_token')}
+    });
+    const trends = (await trendsRes.json()).data || [];
+
+    // Chart.js 图表
+    if (trends.length) {
+        new Chart(document.getElementById('sales-chart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: trends.map(t => t.month),
+                datasets: [
+                    {label:'成交额',data:trends.map(t=>t.revenue),borderColor:'#206bc4',backgroundColor:'rgba(32,107,196,0.1)',fill:true,tension:0.3},
+                    {label:'目标',data:trends.map(t=>t.target),borderColor:'#d63939',borderDash:[4,4],fill:false,tension:0.3}
+                ]
+            },
+            options: {responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}
+        });
+    }
+
+    if (funnel.length) {
+        new Chart(document.getElementById('funnel-chart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: funnel.map(f => f.stage),
+                datasets: [{data:funnel.map(f=>f.count),backgroundColor:'#206bc4',borderRadius:4}]
+            },
+            options: {indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}
+        });
+    }
+});
+</script>
+{% endblock %}

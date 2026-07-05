@@ -1,0 +1,32 @@
+{% extends "layouts/base.html" %}
+{% block title %}客户标签 — CRM{% endblock %}
+{% block page_title %}客户标签{% endblock %}
+{% block breadcrumb_active %}客户管理 / 标签{% endblock %}
+{% block page_actions %}<button class="btn btn-primary" onclick="createTag()"><i class="ti ti-plus me-1"></i>新建标签</button>{% endblock %}
+{% block content %}
+<div class="row row-cards" id="tags-container"><div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const API = '/api/v1/customers/tags';
+async function load(){
+    const res = await fetch(API+'/all', {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
+    const tags = (await res.json()).data || [];
+    const c = document.getElementById('tags-container');
+    if (!tags.length) c.innerHTML = '<div class="col-12"><div class="empty-state"><div class="icon"><i class="ti ti-tags"></i></div><h3>暂无标签</h3></div></div>';
+    else c.innerHTML = tags.map(t => `<div class="col-md-3 col-sm-6"><div class="card"><div class="card-body text-center">
+        <span class="badge mb-2" style="background:${t.color};font-size:1rem;padding:6px 16px">${escapeHtml(t.name)}</span>
+        <div class="mt-2"><a href="#" class="text-danger small" onclick="del(${t.id})">删除</a></div>
+    </div></div></div>`).join('');
+}
+async function createTag(){
+    const name = prompt('请输入标签名称:');
+    if (!name) return;
+    const color = prompt('请输入颜色 (如 #ff6b6b):', '#1890ff');
+    await fetch(API, {method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('access_token')}, body:JSON.stringify({name,color})});
+    load();
+}
+async function del(id){ if (!confirm('确定删除？')) return; await fetch(API+'/'+id, {method:'DELETE', headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}}); load(); }
+load();
+</script>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "layouts/base.html" %}
+{% block title %}商机管理 — FastAPI CRM{% endblock %}
+{% block page_title %}商机管理{% endblock %}
+{% block breadcrumb_active %}商机列表{% endblock %}
+{% block page_actions %}
+<a href="/opportunities/create" class="btn btn-primary"><i class="ti ti-plus me-1"></i> 新建商机</a>
+{% endblock %}
+{% block content %}
+<div class="row row-cards mb-3">
+    <div class="col-12"><div class="card"><div class="card-body" id="funnel-bar" style="height:80px"></div></div></div>
+</div>
+<div class="card"><div class="table-responsive">
+<table class="table table-vcenter card-table table-hover">
+    <thead><tr><th>商机名称</th><th>客户</th><th>金额</th><th>阶段</th><th>概率</th><th>预计成交</th><th>负责人</th><th></th></tr></thead>
+    <tbody id="tbody"><tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr></tbody>
+</table></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const API = '/api/v1/opportunities';
+const stageColors = {initial_contact:'bg-blue',needs_analysis:'bg-cyan',quotation:'bg-yellow',negotiation:'bg-orange',won:'bg-success',lost:'bg-danger'};
+const stageLabels = {initial_contact:'初步接触',needs_analysis:'需求分析',quotation:'报价',negotiation:'谈判',won:'已成交',lost:'已丢单'};
+
+async function load() {
+    const [listRes, funnelRes] = await Promise.all([
+        fetch(API, {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}}),
+        fetch(API+'/funnel', {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}})
+    ]);
+    const d = (await listRes.json());
+    const funnel = (await funnelRes.json()).data;
+    console.log('funnel:', funnel);
+
+    const tbody = document.getElementById('tbody');
+    if (!d.data.length) {
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon"><i class="ti ti-target-arrow"></i></div><h3>暂无商机</h3></div></td></tr>';
+    } else {
+        tbody.innerHTML = d.data.map(o => `<tr>
+            <td><a href="/opportunities/${o.id}" class="text-reset fw-medium">${escapeHtml(o.name)}</a></td>
+            <td>${o.customer_name||'—'}</td>
+            <td class="text-success fw-medium">${formatCurrency(o.amount)}</td>
+            <td><span class="badge ${stageColors[o.stage]}">${stageLabels[o.stage]||o.stage}</span></td>
+            <td>${o.probability}%</td>
+            <td>${o.expected_close_date||'—'}</td>
+            <td>${o.owner_name||'—'}</td>
+            <td><div class="dropdown"><a href="#" class="btn btn-sm btn-icon" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical"></i></a>
+                <div class="dropdown-menu dropdown-menu-end">
+                    <a class="dropdown-item" href="/opportunities/${o.id}/edit"><i class="ti ti-edit me-1"></i>编辑</a>
+                    <a class="dropdown-item text-danger" href="#" onclick="del(${o.id})"><i class="ti ti-trash me-1"></i>删除</a>
+                </div></div></td>
+        </tr>`).join('');
+    }
+}
+async function del(id) { if (!confirm('确定删除？')) return; await fetch(API+'/'+id, {method:'DELETE', headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}}); load(); }
+load();
+</script>
+{% endblock %}

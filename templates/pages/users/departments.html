@@ -1,0 +1,35 @@
+{% extends "layouts/base.html" %}
+{% block title %}部门管理 — CRM{% endblock %}
+{% block page_title %}部门管理{% endblock %}
+{% block breadcrumb_active %}用户管理 / 部门{% endblock %}
+{% block page_actions %}<button class="btn btn-primary" onclick="createDept()"><i class="ti ti-plus me-1"></i>新建部门</button>{% endblock %}
+{% block content %}
+<div class="card"><div class="table-responsive">
+<table class="table table-vcenter card-table"><thead><tr><th>部门名称</th><th>排序</th><th>用户数</th><th>状态</th><th>操作</th></tr></thead>
+<tbody id="tbody"><tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr></tbody>
+</table></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const API = '/api/v1/users/departments';
+async function load(){
+    const res = await fetch(API+'/tree', {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
+    const depts = (await res.json()).data || [];
+    function flatten(list, prefix=''){
+        let rows = '';
+        list.forEach(d => {
+            rows += `<tr><td><span class="fw-medium">${prefix}${escapeHtml(d.name)}</span></td>
+                <td>${d.sort}</td><td>${d.user_count||0}</td>
+                <td>${d.is_active?'<span class="badge bg-success">启用</span>':'<span class="badge bg-secondary">禁用</span>'}</td>
+                <td><a href="#" class="text-danger" onclick="del(${d.id})">删除</a></td></tr>`;
+            if (d.children) rows += flatten(d.children, prefix+'├ ');
+        });
+        return rows;
+    }
+    document.getElementById('tbody').innerHTML = flatten(depts) || '<tr><td colspan="5" class="text-muted text-center">暂无部门</td></tr>';
+}
+async function createDept(){ const name = prompt('部门名称:'); if(name) { await fetch(API,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('access_token')}, body:JSON.stringify({name, sort:0})}); load(); }}
+async function del(id){ if(!confirm('确定删除？'))return; await fetch(API+'/'+id,{method:'DELETE',headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}}); load(); }
+load();
+</script>
+{% endblock %}

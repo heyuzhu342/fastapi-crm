@@ -1,0 +1,52 @@
+{% extends "layouts/base.html" %}
+{% block title %}数据字典 — CRM{% endblock %}
+{% block page_title %}数据字典{% endblock %}
+{% block breadcrumb_active %}系统设置 / 字典{% endblock %}
+{% block page_actions %}<button class="btn btn-primary" onclick="createType()"><i class="ti ti-plus me-1"></i>新建字典类型</button>{% endblock %}
+{% block content %}
+<div class="row row-cards" id="dict-container"><div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const API = '/api/v1/system/dict';
+async function load(){
+    const res = await fetch(API+'/types', {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
+    const types = (await res.json()).data || [];
+    const c = document.getElementById('dict-container');
+    if (!types.length) c.innerHTML = '<div class="col-12"><div class="empty-state"><h3>暂无字典数据</h3></div></div>';
+    else c.innerHTML = types.map(t => `<div class="col-lg-6"><div class="card"><div class="card-header d-flex align-items-center">
+        <h3 class="card-title">${escapeHtml(t.name)} <code>${t.code}</code></h3>
+        <div class="ms-auto"><button class="btn btn-sm btn-outline-primary me-1" onclick="addItem(${t.id},'${escapeHtml(t.name)}')"><i class="ti ti-plus"></i> 添加项</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="delType(${t.id})"><i class="ti ti-trash"></i></button></div></div>
+        <div class="table-responsive"><table class="table table-vcenter card-table"><thead><tr><th>标签</th><th>值</th><th>排序</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody>${(t.items||[]).map(i => `<tr>
+            <td>${escapeHtml(i.label)}</td><td><code>${i.value}</code></td><td>${i.sort}</td>
+            <td>${i.is_active?'<span class="badge bg-success">启用</span>':'<span class="badge bg-secondary">禁用</span>'}</td>
+            <td><a href="#" class="text-danger" onclick="delItem(${i.id})">删除</a></td>
+        </tr>`).join('') || '<tr><td colspan="5" class="text-muted text-center">暂无条目</td></tr>'}</tbody></table></div></div></div>`).join('');
+}
+
+async function createType(){
+    const name = prompt('字典类型名称（如：客户规模）:');
+    if (!name) return;
+    const code = prompt('字典编码（英文，如：customer_scale）:');
+    if (!code) return;
+    await fetch(API+'/types', {method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('access_token')}, body:JSON.stringify({name,code})});
+    load();
+}
+
+async function addItem(typeId, typeName){
+    const label = prompt(`为「${typeName}」添加条目，标签名：`);
+    if (!label) return;
+    const value = prompt('条目值（英文）：');
+    if (!value) return;
+    await fetch(API+'/items', {method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('access_token')}, body:JSON.stringify({dict_type_id:typeId, label, value, sort:0})});
+    load();
+}
+
+async function delType(id){ if(confirm('确定删除该字典类型及所有条目？')){ await fetch(API+'/types/'+id,{method:'DELETE',headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}}); load(); }}
+async function delItem(id){ if(confirm('确定删除？')){ await fetch(API+'/items/'+id,{method:'DELETE',headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}}); load(); }}
+
+load();
+</script>
+{% endblock %}

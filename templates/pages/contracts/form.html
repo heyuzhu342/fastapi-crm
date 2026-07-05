@@ -1,0 +1,39 @@
+{% extends "layouts/base.html" %}
+{% block title %}新建合同 — CRM{% endblock %}
+{% block page_title %}新建合同{% endblock %}
+{% block breadcrumb_active %}<a href="/contracts">合同列表</a> / 新建{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-8"><div class="card"><div class="card-header"><h3 class="card-title">合同信息</h3></div><div class="card-body">
+<form id="form">
+    <div class="mb-3"><label class="form-label required">合同名称</label><input type="text" class="form-control" name="name" required></div>
+    <div class="row mb-3">
+        <div class="col-md-4"><label class="form-label required">金额 ¥</label><input type="number" class="form-control" name="amount" step="0.01" required></div>
+        <div class="col-md-4"><label class="form-label">客户ID</label><input type="number" class="form-control" name="customer_id" required></div>
+        <div class="col-md-4"><label class="form-label">签署日期</label><input type="date" class="form-control" name="signed_date"></div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-4"><label class="form-label">开始日期</label><input type="date" class="form-control" name="start_date"></div>
+        <div class="col-md-4"><label class="form-label">结束日期</label><input type="date" class="form-control" name="end_date"></div>
+    </div>
+    <div class="mb-3"><label class="form-label">描述</label><textarea class="form-control" name="description" rows="2"></textarea></div>
+    <button type="submit" class="btn btn-primary" id="btn-submit"><i class="ti ti-device-floppy me-1"></i>保存</button>
+    <a href="/contracts" class="btn btn-outline-secondary ms-2">取消</a>
+</form>
+</div></div></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+document.getElementById('form').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+    const data = Object.fromEntries(new FormData(this));
+    data.amount = parseFloat(data.amount); data.customer_id = parseInt(data.customer_id);
+    const res = await fetch('/api/v1/contracts', {method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('access_token')}, body:JSON.stringify(data)});
+    if (res.ok) window.location.href = '/contracts';
+    else { alert('保存失败'); btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-floppy me-1"></i>保存'; }
+});
+});
+</script>
+{% endblock %}

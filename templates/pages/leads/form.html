@@ -1,0 +1,54 @@
+{% extends "layouts/base.html" %}
+{% block title %}录入线索 — FastAPI CRM{% endblock %}
+{% block page_title %}<span id="form-title">录入线索</span>{% endblock %}
+{% block breadcrumb_active %}<a href="/leads">线索列表</a> / 录入{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-7"><div class="card"><div class="card-header"><h3 class="card-title">线索信息</h3></div><div class="card-body">
+<form id="form">
+    <div class="row mb-3">
+        <div class="col-md-6"><label class="form-label required">姓名 / 联系人</label><input type="text" class="form-control" name="name" required></div>
+        <div class="col-md-6"><label class="form-label">公司名称</label><input type="text" class="form-control" name="company_name"></div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6"><label class="form-label">电话</label><input type="text" class="form-control" name="contact_phone"></div>
+        <div class="col-md-6"><label class="form-label">邮箱</label><input type="email" class="form-control" name="email"></div>
+    </div>
+    <div class="mb-3"><label class="form-label">来源</label>
+        <select class="form-select" name="source">
+            <option value="website">官网</option><option value="referral">客户推荐</option><option value="exhibition">展会</option>
+            <option value="cold_call">电话陌拜</option><option value="ad">广告</option><option value="other">其他</option>
+        </select></div>
+    <div class="mb-3"><label class="form-label">意向描述</label><textarea class="form-control" name="qualification" rows="2"></textarea></div>
+    <div class="mb-3"><label class="form-label">备注</label><textarea class="form-control" name="remark" rows="2"></textarea></div>
+    <button type="submit" class="btn btn-primary" id="btn-submit"><i class="ti ti-device-floppy me-1"></i>保存</button>
+    <a href="/leads" class="btn btn-outline-secondary ms-2">取消</a>
+</form>
+</div></div></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const p = window.location.pathname.split('/');
+const isEdit = p.includes('edit');
+const id = isEdit ? p[p.indexOf('leads')+1] : null;
+const API = '/api/v1/leads';
+
+(async function(){
+    if (!isEdit) return;
+    document.getElementById('form-title').textContent = '编辑线索';
+    const res = await fetch(API+'/'+id, {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
+    const d = (await res.json()).data;
+    document.querySelectorAll('#form [name]').forEach(el => { if (d[el.name]) el.value = d[el.name]; });
+})();
+
+document.getElementById('form').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+    const data = Object.fromEntries(new FormData(this));
+    const url = isEdit ? API+'/'+id : API;
+    const res = await fetch(url, {method:isEdit?'PUT':'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('access_token')}, body:JSON.stringify(data)});
+    if (res.ok) window.location.href='/leads';
+    else { alert('保存失败'); btn.disabled=false; btn.innerHTML='<i class="ti ti-device-floppy me-1"></i>保存'; }
+});
+</script>
+{% endblock %}

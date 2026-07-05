@@ -1,0 +1,121 @@
+/*
+ * FastAPI CRM — 自定义样式
+ * 基于 Tabler UI Kit
+ */
+
+/* ── 页面布局优化 ────────────────────────────── */
+.page-body {
+    min-height: calc(100vh - 120px);
+}
+
+/* ── 仪表盘卡片 ──────────────────────────────── */
+.card-stats .h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* ── 登录页背景 ──────────────────────────────── */
+.page-center {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.page-center .card {
+    border: none;
+    box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.15);
+    border-radius: 0.75rem;
+}
+
+/* ── 侧边栏品牌 ──────────────────────────────── */
+.navbar-brand-text {
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+}
+
+/* ── 状态指示点 ──────────────────────────────── */
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.status-active { background-color: #2fb344; }
+.status-inactive { background-color: #d63939; }
+.status-pending { background-color: #f59f00; }
+
+/* ── 标签样式 ─────────────────────────────────── */
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin: 2px;
+}
+
+/* ── 空状态 ──────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--tblr-muted);
+}
+
+.empty-state .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* ── 动画 ─────────────────────────────────────── */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── 响应式调整 ───────────────────────────────── */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+/* ── 打印样式 ─────────────────────────────────── */
+@media print {
+    .navbar, .footer, .sidebar { display: none; }
+    .page-body { margin: 0; padding: 0; }
+}
+
+/* ── Swagger UI 美化 ──────────────────────────── */
+.swagger-ui .topbar {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.swagger-ui .topbar .download-url-wrapper .select-label {
+    color: #fff;
+}
+
+.swagger-ui .info .title {
+    color: #1a1a2e;
+}
+
+.swagger-ui .btn.authorize {
+    background-color: #206bc4;
+    border-color: #206bc4;
+}
+
+.swagger-ui .opblock-tag {
+    font-size: 1rem;
+}

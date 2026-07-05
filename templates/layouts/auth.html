@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FastAPI CRM{% endblock %}</title>
+
+    <!-- Tabler CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/tabler-icons/3.17.0/tabler-icons.min.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-h-screen">
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            <!-- Logo -->
+            <div class="text-center mb-4">
+                <a href="/" class="navbar-brand navbar-brand-autodark">
+                    <img src="/static/img/logo.svg" width="48" height="48" alt="CRM" class="mb-2">
+                    <h1 class="text-body-emphasis">FastAPI CRM</h1>
+                </a>
+            </div>
+
+            {% block auth_content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+</body>
+</html>

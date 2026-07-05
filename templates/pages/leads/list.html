@@ -1,0 +1,58 @@
+{% extends "layouts/base.html" %}
+{% block title %}线索管理 — CRM{% endblock %}
+{% block page_title %}线索管理{% endblock %}
+{% block breadcrumb_active %}线索列表{% endblock %}
+{% block page_actions %}<a href="/leads/create" class="btn btn-primary"><i class="ti ti-plus me-1"></i>录入线索</a>{% endblock %}
+{% block content %}
+<div class="card mb-3"><div class="card-body">
+    <form id="filter-form" class="row g-2">
+        <div class="col-md-3"><input type="text" class="form-control" name="search" placeholder="搜索..."></div>
+        <div class="col-md-2"><select class="form-select" name="status">
+            <option value="">全部状态</option>
+            <option value="new">新线索</option><option value="contacted">已联系</option>
+            <option value="qualified">已确认</option><option value="lost">已流失</option>
+        </select></div>
+        <div class="col-auto"><button type="submit" class="btn btn-outline-primary"><i class="ti ti-search me-1"></i>搜索</button></div>
+    </form>
+</div></div>
+<div class="card"><div class="table-responsive">
+<table class="table table-vcenter card-table table-hover">
+    <thead><tr><th>姓名</th><th>公司</th><th>电话</th><th>来源</th><th>状态</th><th>时间</th><th></th></tr></thead>
+    <tbody id="tbody"><tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr></tbody>
+</table></div>
+<div class="card-footer d-flex"><p class="m-0 text-muted" id="info"></p><ul class="pagination m-0 ms-auto" id="pager"></ul></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const API = '/api/v1/leads';
+const stLabel = {new:'新线索',contacted:'已联系',qualified:'已确认',lost:'已流失',converted:'已转化'};
+const stBadge = {new:'bg-blue',contacted:'bg-cyan',qualified:'bg-green',lost:'bg-secondary',converted:'bg-purple'};
+
+async function load(p={}){
+    const qs = new URLSearchParams(p).toString();
+    const res = await fetch(API+(qs?'?'+qs:''), {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
+    const d = (await res.json());
+    const tbody = document.getElementById('tbody');
+    if (!d.data.length) tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon"><i class="ti ti-user-search"></i></div><h3>暂无线索</h3></div></td></tr>';
+    else tbody.innerHTML = d.data.map(l => `<tr>
+        <td><a href="/leads/${l.id}/edit" class="text-reset fw-medium">${escapeHtml(l.name)}</a></td>
+        <td>${l.company_name||'—'}</td><td>${l.contact_phone||'—'}</td><td>${l.source||'—'}</td>
+        <td><span class="badge ${stBadge[l.status]||'bg-secondary'}">${stLabel[l.status]||l.status}</span></td>
+        <td class="text-muted">${formatDate(l.created_at)}</td>
+        <td><div class="dropdown"><a href="#" class="btn btn-sm btn-icon" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical"></i></a>
+            <div class="dropdown-menu dropdown-menu-end">
+                <a class="dropdown-item" href="/leads/${l.id}/edit"><i class="ti ti-edit me-1"></i>编辑</a>
+                ${l.status!=='converted'?`<a class="dropdown-item" href="#" onclick="convert(${l.id})"><i class="ti ti-exchange me-1"></i>转化为客户</a>`:''}
+                <a class="dropdown-item text-danger" href="#" onclick="del(${l.id})"><i class="ti ti-trash me-1"></i>删除</a>
+            </div></div></td>
+    </tr>`).join('');
+    document.getElementById('info').textContent = `共 ${d.meta.total} 条`;
+    let h=''; for(let i=1;i<=d.meta.total_pages;i++) h+=`<li class="page-item ${i===d.meta.page?'active':''}"><a class="page-link" href="#" onclick="load({page:${i}})">${i}</a></li>`;
+    document.getElementById('pager').innerHTML = h;
+}
+async function convert(id){ if(!confirm('确定转化为客户？'))return; await fetch(API+'/'+id+'/convert',{method:'POST',headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}}); load(); }
+async function del(id){ if(!confirm('确定删除？'))return; await fetch(API+'/'+id,{method:'DELETE',headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}}); load(); }
+document.getElementById('filter-form').addEventListener('submit',function(e){ e.preventDefault(); const p={}; new FormData(this).forEach((v,k)=>{if(v)p[k]=v}); load(p); });
+load();
+</script>
+{% endblock %}

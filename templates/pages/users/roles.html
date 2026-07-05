@@ -1,0 +1,24 @@
+{% extends "layouts/base.html" %}
+{% block title %}角色权限 — CRM{% endblock %}
+{% block page_title %}角色权限{% endblock %}
+{% block breadcrumb_active %}用户管理 / 角色{% endblock %}
+{% block content %}
+<div class="card"><div class="table-responsive">
+<table class="table table-vcenter card-table"><thead><tr><th>角色名称</th><th>编码</th><th>描述</th><th>权限数</th><th>用户数</th><th>状态</th></tr></thead>
+<tbody id="tbody"><tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr></tbody>
+</table></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+(async function(){
+    const res = await fetch('/api/v1/users/roles/all', {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
+    const roles = (await res.json()).data || [];
+    document.getElementById('tbody').innerHTML = roles.map(r => `<tr>
+        <td><span class="fw-medium">${escapeHtml(r.name)}</span></td><td><code>${r.code}</code></td>
+        <td class="text-muted">${r.description||'—'}</td><td>${(r.permissions||[]).length}</td>
+        <td>${r.user_count||0}</td>
+        <td>${r.is_active?'<span class="badge bg-success">启用</span>':'<span class="badge bg-secondary">禁用</span>'}</td>
+    </tr>`).join('') || '<tr><td colspan="6" class="text-muted text-center">暂无角色</td></tr>';
+})();
+</script>
+{% endblock %}

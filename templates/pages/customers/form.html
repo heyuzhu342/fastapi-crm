@@ -1,0 +1,147 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}编辑客户 — FastAPI CRM{% endblock %}
+{% block page_title %}{% if is_edit %}编辑客户{% else %}添加客户{% endif %}{% endblock %}
+{% block breadcrumb_active %}<a href="/customers">客户列表</a> / {% if is_edit %}编辑{% else %}添加{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">客户信息</h3></div>
+            <div class="card-body">
+                <form id="customer-form">
+                    <input type="hidden" id="is-edit" value="{{ 'true' if is_edit else 'false' }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label required">公司名称</label>
+                            <input type="text" class="form-control" name="name" required placeholder="请输入公司名称">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">行业</label>
+                            <select class="form-select" name="industry">
+                                <option value="">请选择</option>
+                                <option value="IT">IT/互联网</option>
+                                <option value="finance">金融</option>
+                                <option value="manufacturing">制造业</option>
+                                <option value="education">教育</option>
+                                <option value="healthcare">医疗</option>
+                                <option value="retail">零售</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">规模</label>
+                            <select class="form-select" name="scale">
+                                <option value="">请选择</option>
+                                <option value="micro">微型 (&lt;10人)</option>
+                                <option value="small">小型 (10-50人)</option>
+                                <option value="medium">中型 (50-300人)</option>
+                                <option value="large">大型 (300-1000人)</option>
+                                <option value="enterprise">集团 (&gt;1000人)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">来源</label>
+                            <select class="form-select" name="source">
+                                <option value="">请选择</option>
+                                <option value="website">官网</option>
+                                <option value="referral">客户推荐</option>
+                                <option value="exhibition">展会</option>
+                                <option value="cold_call">电话陌拜</option>
+                                <option value="ad">广告投放</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">国家</label>
+                            <input type="text" class="form-control" name="country" placeholder="中国">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">省份</label>
+                            <input type="text" class="form-control" name="province">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">城市</label>
+                            <input type="text" class="form-control" name="city">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">详细地址</label>
+                        <input type="text" class="form-control" name="address" placeholder="请输入详细地址">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">网址</label>
+                        <input type="url" class="form-control" name="website" placeholder="https://">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">公司描述</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="请输入公司描述信息"></textarea>
+                    </div>
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary" id="btn-submit">
+                            <i class="ti ti-device-floppy me-1"></i> 保 存
+                        </button>
+                        <a href="/customers" class="btn btn-outline-secondary ms-2">取 消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const pathParts = window.location.pathname.split('/');
+const isEdit = pathParts.includes('edit');
+const customerId = isEdit ? pathParts[pathParts.indexOf('customers') + 1] : null;
+const API = '/api/v1/customers';
+
+async function init() {
+    if (!isEdit) return;
+    document.getElementById('is-edit').value = 'true';
+    const res = await fetch(API + '/' + customerId, {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+    });
+    const d = (await res.json()).data;
+    const form = document.getElementById('customer-form');
+    for (let key of ['name','industry','scale','source','country','province','city','address','website','description']) {
+        const el = form.querySelector('[name="' + key + '"]');
+        if (el && d[key]) el.value = d[key];
+    }
+}
+
+document.getElementById('customer-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> 保存中...';
+
+    const fd = new FormData(this);
+    const data = Object.fromEntries(fd);
+    const url = isEdit ? API + '/' + customerId : API;
+    const method = isEdit ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+        method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('access_token') },
+        body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+        window.location.href = '/customers';
+    } else {
+        const err = await res.json();
+        alert(err.detail || err.message || '保存失败');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-device-floppy me-1"></i> 保 存';
+    }
+});
+
+init();
+</script>
+{% endblock %}

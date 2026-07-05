@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FastAPI CRM{% endblock %} — CRM 系统</title>
+
+    <!-- Tabler CSS (unpkg) + Icons (BootCDN) -->
+    <link rel="stylesheet" href="https://unpkg.com/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/tabler-icons/3.17.0/tabler-icons.min.css">
+
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="/static/css/app.css">
+
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <div class="page">
+        <!-- 侧边栏 -->
+        {% include "components/sidebar.html" %}
+
+        <div class="page-wrapper">
+            <!-- 顶部导航 -->
+            {% include "components/header.html" %}
+
+            <!-- 主内容区 -->
+            <div class="page-body">
+                <div class="container-xl">
+                    <!-- 页面标题 & 面包屑 -->
+                    {% block page_header %}
+                    <div class="page-header d-print-none">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h2 class="page-title">{% block page_title %}首页{% endblock %}</h2>
+                                <div class="text-muted mt-1">
+                                    {% block breadcrumb %}
+                                    <ol class="breadcrumb" aria-label="breadcrumbs">
+                                        <li class="breadcrumb-item"><a href="/">首页</a></li>
+                                        <li class="breadcrumb-item active">{% block breadcrumb_active %}仪表盘{% endblock %}</li>
+                                    </ol>
+                                    {% endblock %}
+                                </div>
+                            </div>
+                            <div class="col-auto ms-auto d-print-none">
+                                {% block page_actions %}{% endblock %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endblock %}
+
+                    <!-- Alert 消息区域 -->
+                    <div id="alert-container"></div>
+
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+
+            <!-- 页脚 -->
+            <footer class="footer footer-transparent d-print-none">
+                <div class="container-xl">
+                    <div class="row text-center align-items-center flex-row-reverse">
+                        <div class="col-lg-auto ms-lg-auto">
+                            <ul class="list-inline list-inline-dots mb-0">
+                                <li class="list-inline-item">
+                                    v{{ settings.APP_VERSION }}
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+                            Copyright &copy; 2026 FastAPI CRM. All rights reserved.
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Tabler JS (内置 Bootstrap 5，勿重复加载) + Chart.js -->
+    <script src="https://unpkg.com/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <!-- 自定义 JS -->
+    <script src="/static/js/app.js"></script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

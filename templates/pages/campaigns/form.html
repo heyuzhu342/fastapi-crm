@@ -1,0 +1,43 @@
+{% extends "layouts/base.html" %}
+{% block title %}新建活动 — CRM{% endblock %}
+{% block page_title %}新建活动{% endblock %}
+{% block breadcrumb_active %}<a href="/campaigns">活动列表</a> / 新建{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-8"><div class="card"><div class="card-header"><h3 class="card-title">活动信息</h3></div><div class="card-body">
+<form id="form">
+    <div class="mb-3"><label class="form-label required">活动名称</label><input type="text" class="form-control" name="name" required></div>
+    <div class="row mb-3">
+        <div class="col-md-4"><label class="form-label">类型</label><select class="form-select" name="campaign_type">
+            <option value="offline">线下活动</option><option value="online">线上</option><option value="email">邮件</option><option value="social">社交媒体</option><option value="other">其他</option>
+        </select></div>
+        <div class="col-md-4"><label class="form-label">预算 ¥</label><input type="number" class="form-control" name="budget" step="0.01"></div>
+        <div class="col-md-4"><label class="form-label">预期收入 ¥</label><input type="number" class="form-control" name="expected_revenue" step="0.01"></div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-4"><label class="form-label">开始日期</label><input type="date" class="form-control" name="start_date"></div>
+        <div class="col-md-4"><label class="form-label">结束日期</label><input type="date" class="form-control" name="end_date"></div>
+    </div>
+    <div class="mb-3"><label class="form-label">目标受众</label><input type="text" class="form-control" name="target_audience" placeholder="如：IT行业决策者"></div>
+    <div class="mb-3"><label class="form-label">描述</label><textarea class="form-control" name="description" rows="2"></textarea></div>
+    <button type="submit" class="btn btn-primary" id="btn-submit"><i class="ti ti-device-floppy me-1"></i>保存</button>
+    <a href="/campaigns" class="btn btn-outline-secondary ms-2">取消</a>
+</form>
+</div></div></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+document.getElementById('form').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中...';
+    const data = Object.fromEntries(new FormData(this));
+    if (data.budget) data.budget = parseFloat(data.budget);
+    if (data.expected_revenue) data.expected_revenue = parseFloat(data.expected_revenue);
+    const res = await fetch('/api/v1/campaigns', {method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('access_token')}, body:JSON.stringify(data)});
+    if (res.ok) window.location.href = '/campaigns';
+    else { alert('保存失败'); btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-floppy me-1"></i>保存'; }
+});
+});
+</script>
+{% endblock %}

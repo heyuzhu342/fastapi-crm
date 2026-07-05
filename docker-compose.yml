@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # ── MySQL 5.7 数据库 ──────────────────────────
+  mysql:
+    image: mysql:5.7
+    container_name: crm-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: fastapi_crm
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --explicit_defaults_for_timestamp=1
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis 缓存 & 消息队列 ──────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: crm-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  # ── FastAPI 应用 ──────────────────────────────
+  app:
+    build: .
+    container_name: crm-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=mysql+asyncmy://root:password@mysql:3306/fastapi_crm?charset=utf8mb4
+      - DATABASE_URL_SYNC=mysql+pymysql://root:password@mysql:3306/fastapi_crm?charset=utf8mb4
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./uploads:/app/uploads
+      - ./static:/app/static
+      - ./templates:/app/templates
+
+  # ── Celery Worker ─────────────────────────────
+  celery-worker:
+    build: .
+    container_name: crm-celery-worker
+    restart: unless-stopped
+    command: celery -A app.core.celery_app worker -l info -c 4
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=mysql+asyncmy://root:password@mysql:3306/fastapi_crm?charset=utf8mb4
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # ── Celery Beat (定时调度) ─────────────────────
+  celery-beat:
+    build: .
+    container_name: crm-celery-beat
+    restart: unless-stopped
+    command: celery -A app.core.celery_app beat -l info
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=mysql+asyncmy://root:password@mysql:3306/fastapi_crm?charset=utf8mb4
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+volumes:
+  mysql_data:
+  redis_data:

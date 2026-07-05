@@ -1,0 +1,116 @@
+{% extends "layouts/auth.html" %}
+
+{% block title %}注册 — FastAPI CRM{% endblock %}
+
+{% block auth_content %}
+<div class="card card-md">
+    <div class="card-body">
+        <h2 class="card-title text-center mb-4">创建新账户</h2>
+
+        <form method="POST" action="/api/v1/auth/register" id="register-form">
+            <div class="mb-3">
+                <label class="form-label" for="username">用户名 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="username" name="username"
+                       placeholder="2-50个字符" minlength="2" maxlength="50" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="full_name">姓名</label>
+                <input type="text" class="form-control" id="full_name" name="full_name"
+                       placeholder="请输入真实姓名">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="email">邮箱</label>
+                <input type="email" class="form-control" id="email" name="email"
+                       placeholder="you@example.com">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="phone">手机号</label>
+                <input type="tel" class="form-control" id="phone" name="phone"
+                       placeholder="13800138000">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="password">密码 <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" id="password" name="password"
+                       placeholder="至少6位" minlength="6" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="confirm_password">确认密码 <span class="text-danger">*</span></label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                       placeholder="请再次输入密码" minlength="6" required>
+            </div>
+
+            <div id="register-error" class="alert alert-danger d-none"></div>
+            <div id="register-success" class="alert alert-success d-none"></div>
+
+            <div class="form-footer">
+                <button type="submit" class="btn btn-primary w-100" id="btn-register">
+                    <i class="ti ti-user-plus me-1"></i> 注 册
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-footer text-center py-3">
+        已有账户？
+        <a href="/login" class="text-decoration-none">立即登录</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block head_extra %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+document.getElementById('register-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-register');
+    const errorBox = document.getElementById('register-error');
+    const successBox = document.getElementById('register-success');
+    errorBox.classList.add('d-none');
+    successBox.classList.add('d-none');
+
+    const pwd = document.getElementById('password').value;
+    const confirmPwd = document.getElementById('confirm_password').value;
+
+    if (pwd !== confirmPwd) {
+        errorBox.textContent = '两次密码不一致';
+        errorBox.classList.remove('d-none');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> 注册中...';
+
+    try {
+        const formData = new FormData(this);
+        const response = await fetch('/api/v1/auth/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(Object.fromEntries(formData))
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.code === 200) {
+            successBox.textContent = '注册成功！3秒后跳转到登录页...';
+            successBox.classList.remove('d-none');
+            setTimeout(() => { window.location.href = '/login'; }, 3000);
+        } else {
+            errorBox.textContent = data.detail || data.message || '注册失败';
+            errorBox.classList.remove('d-none');
+        }
+    } catch (err) {
+        errorBox.textContent = '网络错误，请检查连接';
+        errorBox.classList.remove('d-none');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-user-plus me-1"></i> 注 册';
+    }
+});
+});  // DOMContentLoaded
+</script>
+{% endblock %}

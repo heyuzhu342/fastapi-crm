@@ -1,0 +1,153 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}客户详情 — FastAPI CRM{% endblock %}
+{% block page_title %}客户详情{% endblock %}
+{% block breadcrumb_active %}<a href="/customers">客户列表</a> / 详情{% endblock %}
+
+{% block page_actions %}
+<a href="#" id="btn-edit" class="btn btn-outline-primary">
+    <i class="ti ti-edit me-1"></i> 编辑
+</a>
+<a href="#" id="btn-delete" class="btn btn-outline-danger">
+    <i class="ti ti-trash me-1"></i> 删除
+</a>
+{% endblock %}
+
+{% block content %}
+<div id="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+</div>
+
+<div id="customer-detail" class="d-none">
+    <!-- 基本信息 -->
+    <div class="row row-cards mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">基本信息</h3>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-3">公司名称</dt>
+                        <dd class="col-9 fw-medium" id="d-name"></dd>
+                        <dt class="col-3">行业</dt>
+                        <dd class="col-9" id="d-industry"></dd>
+                        <dt class="col-3">规模</dt>
+                        <dd class="col-9" id="d-scale"></dd>
+                        <dt class="col-3">来源</dt>
+                        <dd class="col-9" id="d-source"></dd>
+                        <dt class="col-3">地址</dt>
+                        <dd class="col-9" id="d-address"></dd>
+                        <dt class="col-3">网址</dt>
+                        <dd class="col-9" id="d-website"></dd>
+                        <dt class="col-3">描述</dt>
+                        <dd class="col-9" id="d-description"></dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- 联系人 -->
+            <div class="card mt-3">
+                <div class="card-header d-flex align-items-center">
+                    <h3 class="card-title">联系人</h3>
+                    <button class="btn btn-sm btn-primary ms-auto" onclick="showContactForm()">
+                        <i class="ti ti-plus me-1"></i> 添加
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead><tr><th>姓名</th><th>职位</th><th>电话</th><th>邮箱</th><th>操作</th></tr></thead>
+                        <tbody id="contacts-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- 状态信息 -->
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">状态</h3></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">客户状态</label>
+                        <div id="d-status"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">负责人</label>
+                        <div id="d-owner"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">创建时间</label>
+                        <div class="text-muted" id="d-created"></div>
+                    </div>
+                    <div>
+                        <label class="form-label text-muted">标签</label>
+                        <div id="d-tags"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 跟进记录 -->
+            <div class="card mt-3">
+                <div class="card-header"><h3 class="card-title">最近跟进</h3></div>
+                <div class="list-group list-group-flush" id="followups-list" style="max-height: 300px; overflow-y: auto;">
+                    <div class="list-group-item text-center text-muted py-4" id="followups-empty">
+                        <i class="ti ti-inbox icon-lg"></i><div>暂无跟进记录</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const customerId = window.location.pathname.split('/').pop();
+const API = '/api/v1/customers';
+
+async function loadDetail() {
+    const res = await fetch(API + '/' + customerId, {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+    });
+    if (!res.ok) { window.location.href = '/customers'; return; }
+    const d = (await res.json()).data;
+
+    document.getElementById('loading').classList.add('d-none');
+    document.getElementById('detail').classList.remove('d-none');
+    document.getElementById('d-name').textContent = d.name;
+    document.getElementById('d-industry').textContent = d.industry || '—';
+    document.getElementById('d-scale').textContent = d.scale || '—';
+    document.getElementById('d-source').textContent = d.source || '—';
+    document.getElementById('d-address').textContent = [d.province, d.city, d.address].filter(Boolean).join(' ') || '—';
+    document.getElementById('d-website').textContent = d.website || '—';
+    document.getElementById('d-description').textContent = d.description || '—';
+    document.getElementById('d-status').innerHTML = d.status === 'active' ? '<span class="badge bg-success">活跃</span>' : '<span class="badge bg-secondary">' + d.status + '</span>';
+    document.getElementById('d-owner').textContent = d.owner_name || '未分配';
+    document.getElementById('d-created').textContent = formatDate(d.created_at);
+    document.getElementById('d-tags').innerHTML = d.tags.map(t => `<span class="badge me-1" style="background:${t.color}">${t.name}</span>`).join('') || '—';
+    document.getElementById('btn-edit').href = '/customers/' + customerId + '/edit';
+
+    // 联系人
+    const ct = document.getElementById('contacts-tbody');
+    ct.innerHTML = d.contacts.map(c => `<tr>
+        <td>${c.name}${c.is_primary ? ' <span class="badge bg-blue">主要</span>' : ''}</td>
+        <td>${c.title || '—'}</td>
+        <td>${c.phone || '—'}</td>
+        <td>${c.email || '—'}</td>
+        <td><a href="#" class="text-danger" onclick="deleteContact(${c.id})"><i class="ti ti-trash"></i></a></td>
+    </tr>`).join('') || '<tr><td colspan="5" class="text-muted">暂无联系人</td></tr>';
+}
+
+document.getElementById('btn-delete').addEventListener('click', async function() {
+    if (!confirm('确定删除该客户及其所有关联数据吗？')) return;
+    await fetch(API + '/' + customerId, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+    });
+    window.location.href = '/customers';
+});
+
+loadDetail();
+</script>
+{% endblock %}

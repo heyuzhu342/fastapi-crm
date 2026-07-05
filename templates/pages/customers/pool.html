@@ -1,0 +1,27 @@
+{% extends "layouts/base.html" %}
+{% block title %}公海池 — CRM{% endblock %}
+{% block page_title %}公海池{% endblock %}
+{% block breadcrumb_active %}客户管理 / 公海池{% endblock %}
+{% block content %}
+<div class="card"><div class="table-responsive">
+<table class="table table-vcenter card-table table-hover">
+    <thead><tr><th>公司名称</th><th>行业</th><th>来源</th><th>进入公海时间</th><th>操作</th></tr></thead>
+    <tbody id="tbody"><tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr></tbody>
+</table></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+(async function(){
+    const res = await fetch('/api/v1/customers?is_public_pool=true', {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
+    const d = (await res.json());
+    const tbody = document.getElementById('tbody');
+    if (!d.data.length) tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon"><i class="ti ti-wave-saw-tool"></i></div><h3>公海池为空</h3></div></td></tr>';
+    else tbody.innerHTML = d.data.map(c => `<tr>
+        <td><span class="fw-medium">${escapeHtml(c.name)}</span></td>
+        <td>${c.industry||'—'}</td><td>${c.source||'—'}</td>
+        <td class="text-muted">${formatDate(c.created_at)}</td>
+        <td><a href="/customers/${c.id}" class="btn btn-sm btn-primary">认领</a></td>
+    </tr>`).join('');
+})();
+</script>
+{% endblock %}

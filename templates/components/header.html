@@ -1,0 +1,78 @@
+<!-- 顶部导航栏 -->
+<header class="navbar navbar-expand-md navbar-light d-print-none">
+    <div class="container-xl">
+        <!-- 汉堡按钮 (移动端) -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- 全局搜索 -->
+        <div class="collapse navbar-collapse" id="navbar-menu">
+            <div class="d-flex flex-column flex-md-row flex-fill align-items-stretch align-items-md-center">
+                <div class="me-3 d-none d-md-block">
+                    <form action="/search" method="GET" autocomplete="off">
+                        <div class="input-icon">
+                            <span class="input-icon-addon">
+                                <i class="ti ti-search"></i>
+                            </span>
+                            <input type="text" name="q" class="form-control form-control-rounded"
+                                   placeholder="搜索客户、联系人、商机..." aria-label="全局搜索">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧操作区 -->
+        <div class="nav nav-align-right">
+            <!-- 通知 -->
+            <div class="nav-item dropdown d-none d-md-flex me-3">
+                <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" aria-label="通知">
+                    <i class="ti ti-bell icon"></i>
+                    <span class="badge bg-red text-white" id="notification-badge" style="display:none;">0</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end dropdown-menu-card">
+                    <div class="card">
+                        <div class="card-header d-flex align-items-center">
+                            <div class="card-title">通知</div>
+                            <a href="/notifications" class="ms-auto link-secondary">查看全部</a>
+                        </div>
+                        <div class="list-group list-group-flush overflow-auto" style="max-height: 20rem;">
+                            <div class="list-group-item text-center text-muted py-4">
+                                <i class="ti ti-inbox icon-lg mb-2"></i>
+                                <div>暂无新通知</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户菜单 -->
+            <div class="nav-item dropdown">
+                <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="用户菜单">
+                    <span class="avatar avatar-sm" style="background-image: url(/static/img/avatar-default.svg)"></span>
+                    <div class="d-none d-xl-block ps-2">
+                        <div class="fs-2 fw-medium">管理员</div>
+                        <div class="mt-1 small text-muted">admin</div>
+                    </div>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end">
+                    <a href="/profile" class="dropdown-item">
+                        <i class="ti ti-user me-2"></i> 个人资料
+                    </a>
+                    <a href="/profile/change-password" class="dropdown-item">
+                        <i class="ti ti-key me-2"></i> 修改密码
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="/system/config" class="dropdown-item">
+                        <i class="ti ti-settings me-2"></i> 系统设置
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="/api/v1/auth/logout" class="dropdown-item text-danger" id="btn-logout">
+                        <i class="ti ti-logout me-2"></i> 退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

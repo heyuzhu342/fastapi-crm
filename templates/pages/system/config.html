@@ -1,0 +1,50 @@
+{% extends "layouts/base.html" %}
+{% block title %}系统设置 — CRM{% endblock %}
+{% block page_title %}系统设置{% endblock %}
+{% block breadcrumb_active %}配置管理{% endblock %}
+{% block content %}
+<div class="row row-cards">
+    <div class="col-lg-6">
+        <div class="card"><div class="card-header"><h3 class="card-title">系统配置</h3></div>
+        <div class="table-responsive"><table class="table table-vcenter card-table">
+            <thead><tr><th>配置项</th><th>值</th><th>说明</th></tr></thead>
+            <tbody id="config-tbody"><tr><td colspan="3" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr></tbody>
+        </table></div></div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card"><div class="card-header d-flex align-items-center"><h3 class="card-title">操作日志</h3>
+        <button class="btn btn-sm btn-outline-danger ms-auto" onclick="clearLogs()"><i class="ti ti-trash me-1"></i>清空日志</button></div>
+        <div class="table-responsive"><table class="table table-vcenter card-table">
+            <thead><tr><th>用户</th><th>资源</th><th>操作</th><th>结果</th><th>时间</th><th></th></tr></thead>
+            <tbody id="log-tbody"><tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr></tbody>
+        </table></div></div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(async function(){
+    const [cfgRes, logRes] = await Promise.all([
+        fetch('/api/v1/system/config', {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}}),
+        fetch('/api/v1/logs?page_size=10', {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}})
+    ]);
+    const configs = (await cfgRes.json()).data || [];
+    document.getElementById('config-tbody').innerHTML = configs.length
+        ? configs.map(c => `<tr><td><code>${c.key}</code></td><td>${escapeHtml(c.value)}</td><td class="text-muted">${c.description||'—'}</td></tr>`).join('')
+        : '<tr><td colspan="3" class="text-muted text-center">暂无配置</td></tr>';
+
+    const logs = (await logRes.json()).data || [];
+    document.getElementById('log-tbody').innerHTML = logs.length
+        ? logs.map(l => `<tr>
+            <td>${l.username||'—'}</td><td>${l.resource}</td><td>${l.action}</td>
+            <td>${l.status==='success'?'<span class="badge bg-success">成功</span>':'<span class="badge bg-danger">失败</span>'}</td>
+            <td class="text-muted small">${formatDate(l.created_at)}</td>
+            <td><a href="#" class="text-danger small" onclick="delLog(${l.id})">删除</a></td>
+        </tr>`).join('')
+        : '<tr><td colspan="6" class="text-muted text-center">暂无日志</td></tr>';
+})();
+
+async function delLog(id){ if(!confirm('确定删除该日志？'))return; await fetch('/api/v1/logs/'+id,{method:'DELETE',headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}}); location.reload(); }
+async function clearLogs(){ if(!confirm('确定清空全部日志？此操作不可恢复！'))return; await fetch('/api/v1/logs',{method:'DELETE',headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}}); location.reload(); }
+</script>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}客户管理 — FastAPI CRM{% endblock %}
+{% block page_title %}客户管理{% endblock %}
+{% block breadcrumb_active %}客户列表{% endblock %}
+
+{% block page_actions %}
+<a href="/customers/create" class="btn btn-primary">
+    <i class="ti ti-plus me-1"></i> 添加客户
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- 筛选栏 -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form id="filter-form" class="row g-2">
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="search" placeholder="搜索公司名称...">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="industry">
+                    <option value="">全部行业</option>
+                    <option value="IT">IT/互联网</option>
+                    <option value="finance">金融</option>
+                    <option value="manufacturing">制造业</option>
+                    <option value="education">教育</option>
+                    <option value="healthcare">医疗</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="status">
+                    <option value="">全部状态</option>
+                    <option value="active">活跃</option>
+                    <option value="inactive">非活跃</option>
+                    <option value="blacklist">黑名单</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="ti ti-search me-1"></i> 搜索
+                </button>
+                <button type="reset" class="btn btn-outline-secondary">
+                    <i class="ti ti-refresh me-1"></i> 重置
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 客户表格 -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table table-hover">
+            <thead>
+                <tr>
+                    <th>公司名称</th>
+                    <th>行业</th>
+                    <th>联系人</th>
+                    <th>状态</th>
+                    <th>来源</th>
+                    <th>负责人</th>
+                    <th>创建时间</th>
+                    <th class="w-1"></th>
+                </tr>
+            </thead>
+            <tbody id="customer-tbody">
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <div class="mt-2 text-muted">加载中...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <!-- 分页 -->
+    <div class="card-footer d-flex align-items-center" id="pagination-container">
+        <p class="m-0 text-muted" id="pagination-info">共 0 条</p>
+        <ul class="pagination m-0 ms-auto" id="pagination"></ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const API = '/api/v1/customers';
+
+function statusBadge(status) {
+    const map = { active: 'bg-success', inactive: 'bg-secondary', blacklist: 'bg-danger' };
+    const label = { active: '活跃', inactive: '非活跃', blacklist: '黑名单' };
+    return `<span class="badge ${map[status] || 'bg-secondary'}">${label[status] || status}</span>`;
+}
+
+function buildRow(c) {
+    return `
+    <tr>
+        <td><a href="/customers/${c.id}" class="text-reset fw-medium">${escapeHtml(c.name)}</a></td>
+        <td class="text-muted">${c.industry || '—'}</td>
+        <td>${c.contact_count}</td>
+        <td>${statusBadge(c.status)}</td>
+        <td class="text-muted">${c.source || '—'}</td>
+        <td class="text-muted">${c.owner_name || '未分配'}</td>
+        <td class="text-muted">${formatDate(c.created_at)}</td>
+        <td>
+            <div class="dropdown">
+                <a href="#" class="btn btn-sm btn-icon" data-bs-toggle="dropdown"><i class="ti ti-dots-vertical"></i></a>
+                <div class="dropdown-menu dropdown-menu-end">
+                    <a class="dropdown-item" href="/customers/${c.id}"><i class="ti ti-eye me-1"></i> 查看</a>
+                    <a class="dropdown-item" href="/customers/${c.id}/edit"><i class="ti ti-edit me-1"></i> 编辑</a>
+                    <a class="dropdown-item text-danger" href="#" onclick="deleteCustomer(${c.id})"><i class="ti ti-trash me-1"></i> 删除</a>
+                </div>
+            </div>
+        </td>
+    </tr>`;
+}
+
+async function loadCustomers(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    const res = await fetch(API + (qs ? '?' + qs : ''), {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+    });
+    if (!res.ok) { window.location.href = '/login'; return; }
+    const d = await res.json();
+    const tbody = document.getElementById('customer-tbody');
+
+    if (!d.data.length) {
+        tbody.innerHTML = `<tr><td colspan="8">
+            <div class="empty-state"><div class="icon"><i class="ti ti-building"></i></div>
+            <h3>暂无客户</h3><p>点击右上角「添加客户」创建第一个客户</p></div>
+        </td></tr>`;
+    } else {
+        tbody.innerHTML = d.data.map(buildRow).join('');
+    }
+
+    document.getElementById('pagination-info').textContent = `共 ${d.meta.total} 条`;
+    renderPagination(d.meta);
+}
+
+function renderPagination(meta) {
+    const ul = document.getElementById('pagination');
+    let html = '';
+    for (let i = 1; i <= meta.total_pages; i++) {
+        html += `<li class="page-item ${i === meta.page ? 'active' : ''}">
+            <a class="page-link" href="#" onclick="loadCustomers({page:${i},page_size:${meta.page_size}})">${i}</a></li>`;
+    }
+    ul.innerHTML = html;
+}
+
+async function deleteCustomer(id) {
+    if (!confirm('确定删除该客户吗？')) return;
+    await fetch(API + '/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+    });
+    loadCustomers();
+}
+
+document.getElementById('filter-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const fd = new FormData(this);
+    const params = {};
+    for (let [k, v] of fd) { if (v) params[k] = v; }
+    loadCustomers(params);
+});
+
+document.getElementById('filter-form').addEventListener('reset', function(e) {
+    setTimeout(() => loadCustomers(), 0);
+});
+
+loadCustomers();
+</script>
+{% endblock %}

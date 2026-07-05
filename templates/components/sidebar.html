@@ -1,0 +1,171 @@
+<!-- 侧边栏导航 -->
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+    <div class="container-fluid">
+        <!-- 汉堡菜单按钮 -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Logo -->
+        <h1 class="navbar-brand navbar-brand-autodark">
+            <a href="/">
+                <img src="/static/img/logo.svg" width="32" height="32" alt="CRM" class="navbar-brand-image">
+                <span class="navbar-brand-text">FastAPI CRM</span>
+            </a>
+        </h1>
+
+        <div class="collapse navbar-collapse" id="sidebar-menu">
+            <ul class="navbar-nav pt-lg-3">
+                <!-- 仪表盘 -->
+                <li class="nav-item">
+                    <a class="nav-link {% if request.url.path == '/' %}active{% endif %}" href="/">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-dashboard"></i>
+                        </span>
+                        <span class="nav-link-title">仪表盘</span>
+                    </a>
+                </li>
+
+                <!-- 客户管理 -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#sidebar-customers" data-bs-toggle="dropdown" role="button">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-building"></i>
+                        </span>
+                        <span class="nav-link-title">客户管理</span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="/customers">
+                            <i class="ti ti-list"></i> 客户列表
+                        </a>
+                        <a class="dropdown-item" href="/customers/create">
+                            <i class="ti ti-plus"></i> 添加客户
+                        </a>
+                        <a class="dropdown-item" href="/customers/pool">
+                            <i class="ti ti-wave-saw-tool"></i> 公海池
+                        </a>
+                        <a class="dropdown-item" href="/customers/tags">
+                            <i class="ti ti-tags"></i> 客户标签
+                        </a>
+                    </div>
+                </li>
+
+                <!-- 销售管理 -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#sidebar-sales" data-bs-toggle="dropdown" role="button">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-chart-funnel"></i>
+                        </span>
+                        <span class="nav-link-title">销售管理</span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="/leads">
+                            <i class="ti ti-user-search"></i> 线索管理
+                        </a>
+                        <a class="dropdown-item" href="/opportunities">
+                            <i class="ti ti-target-arrow"></i> 商机管理
+                        </a>
+                        <a class="dropdown-item" href="/quotations">
+                            <i class="ti ti-file-invoice"></i> 报价单
+                        </a>
+                        <a class="dropdown-item" href="/contracts">
+                            <i class="ti ti-file-text"></i> 合同管理
+                        </a>
+                    </div>
+                </li>
+
+                <!-- 产品管理 -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#sidebar-products" data-bs-toggle="dropdown" role="button">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-package"></i>
+                        </span>
+                        <span class="nav-link-title">产品管理</span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="/products">
+                            <i class="ti ti-list"></i> 产品列表
+                        </a>
+                        <a class="dropdown-item" href="/products/categories">
+                            <i class="ti ti-category"></i> 产品分类
+                        </a>
+                    </div>
+                </li>
+
+                <!-- 营销管理 -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/campaigns">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-megaphone"></i>
+                        </span>
+                        <span class="nav-link-title">营销管理</span>
+                    </a>
+                </li>
+
+                <!-- 客户服务 -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/tickets">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-ticket"></i>
+                        </span>
+                        <span class="nav-link-title">客户服务</span>
+                    </a>
+                </li>
+
+                <li class="nav-item mt-3 pt-3 border-top border-secondary">
+                    <span class="nav-link disabled">
+                        <span class="nav-link-title text-uppercase text-muted" style="font-size: 0.65rem; letter-spacing: 0.1em;">系统管理</span>
+                    </span>
+                </li>
+
+                <!-- 报表分析 -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/reports">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-chart-bar"></i>
+                        </span>
+                        <span class="nav-link-title">报表分析</span>
+                    </a>
+                </li>
+
+                <!-- 用户 & 权限 -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#sidebar-system" data-bs-toggle="dropdown" role="button">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-users"></i>
+                        </span>
+                        <span class="nav-link-title">用户管理</span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="/users">用户列表</a>
+                        <a class="dropdown-item" href="/users/roles">角色权限</a>
+                        <a class="dropdown-item" href="/users/departments">部门管理</a>
+                    </div>
+                </li>
+
+                <!-- 系统设置 -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#sidebar-config" data-bs-toggle="dropdown" role="button">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-settings"></i>
+                        </span>
+                        <span class="nav-link-title">系统设置</span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="/system/config">系统配置</a>
+                        <a class="dropdown-item" href="/system/dict">数据字典</a>
+                        <a class="dropdown-item" href="/system/logs">操作日志</a>
+                    </div>
+                </li>
+            </ul>
+
+            <!-- 底部信息 -->
+            <div class="mt-auto px-3 py-2 d-none d-lg-block">
+                <div class="text-muted small">
+                    <i class="ti ti-circle-filled text-success me-1" style="font-size: 0.5rem;"></i>
+                    系统运行中 &middot; v1.0
+                </div>
+            </div>
+        </div>
+    </div>
+</aside>

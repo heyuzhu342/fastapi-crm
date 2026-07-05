@@ -1,0 +1,37 @@
+{% extends "layouts/base.html" %}
+{% block title %}创建工单 — CRM{% endblock %}
+{% block page_title %}创建工单{% endblock %}
+{% block breadcrumb_active %}<a href="/tickets">工单列表</a> / 创建{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-8"><div class="card"><div class="card-header"><h3 class="card-title">工单信息</h3></div><div class="card-body">
+<form id="form">
+    <div class="mb-3"><label class="form-label required">标题</label><input type="text" class="form-control" name="title" required></div>
+    <div class="row mb-3">
+        <div class="col-md-6"><label class="form-label">类型</label><select class="form-select" name="ticket_type">
+            <option value="question">问题咨询</option><option value="complaint">投诉</option><option value="suggestion">建议</option><option value="repair">维修</option><option value="other">其他</option>
+        </select></div>
+        <div class="col-md-6"><label class="form-label">优先级</label><select class="form-select" name="priority">
+            <option value="normal">普通</option><option value="low">低</option><option value="high">高</option><option value="urgent">紧急</option>
+        </select></div>
+    </div>
+    <div class="mb-3"><label class="form-label required">描述</label><textarea class="form-control" name="description" rows="4" required></textarea></div>
+    <button type="submit" class="btn btn-primary" id="btn-submit"><i class="ti ti-device-floppy me-1"></i>提交</button>
+    <a href="/tickets" class="btn btn-outline-secondary ms-2">取消</a>
+</form>
+</div></div></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+document.getElementById('form').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>提交中...';
+    const data = Object.fromEntries(new FormData(this));
+    const res = await fetch('/api/v1/tickets', {method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('access_token')}, body:JSON.stringify(data)});
+    if (res.ok) window.location.href = '/tickets';
+    else { alert('提交失败'); btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-floppy me-1"></i>提交'; }
+});
+});
+</script>
+{% endblock %}

@@ -1,0 +1,54 @@
+# ============================================
+# FastAPI CRM 依赖
+# 开发模式: pip install -r requirements.txt
+# ============================================
+
+# FastAPI & Server
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.18
+
+# Database
+sqlalchemy[asyncio]==2.0.36
+aiosqlite==0.20.0
+alembic==1.14.1
+# MySQL drivers (生产环境取消注释)
+# asyncmy==0.2.9
+# pymysql==1.1.1
+
+# Auth & Security
+python-jose[pycryptodome]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.1
+bcrypt==4.2.1
+
+# Data Validation
+pydantic==2.10.5
+pydantic-settings==2.7.1
+email-validator==2.2.0
+
+# Templates
+jinja2==3.1.5
+aiofiles==24.1.0
+
+# Async Tasks (生产环境取消 Redis/Celery 注释)
+# celery[redis]==5.4.0
+# redis==5.2.1
+
+# File Storage
+qiniu==7.14.0
+
+# Export
+openpyxl==3.1.5
+
+# Logging
+loguru==0.7.3
+
+# Utils
+httpx==0.28.1
+python-dateutil==2.9.0.post0
+Pillow==11.1.0
+
+# Dev & Test
+pytest==8.3.4
+pytest-asyncio==0.25.0

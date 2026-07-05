@@ -1,0 +1,41 @@
+{% extends "layouts/base.html" %}
+{% block title %}报价管理 — FastAPI CRM{% endblock %}
+{% block page_title %}报价管理{% endblock %}
+{% block breadcrumb_active %}报价单列表{% endblock %}
+{% block page_actions %}
+<a href="/quotations/create" class="btn btn-primary"><i class="ti ti-plus me-1"></i> 新建报价</a>
+{% endblock %}
+{% block content %}
+<div class="card"><div class="table-responsive">
+<table class="table table-vcenter card-table table-hover">
+    <thead><tr><th>报价单号</th><th>客户</th><th>金额</th><th>状态</th><th>有效期</th><th>创建人</th><th>时间</th><th></th></tr></thead>
+    <tbody id="tbody"><tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr></tbody>
+</table></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const API = '/api/v1/quotations';
+const statusBadge = {draft:'bg-secondary',sent:'bg-blue',approved:'bg-success',rejected:'bg-danger',expired:'bg-warning'};
+const statusLabel = {draft:'草稿',sent:'已发送',approved:'已批准',rejected:'已驳回',expired:'已过期'};
+
+(async function(){
+    const res = await fetch(API, {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
+    const d = (await res.json());
+    const tbody = document.getElementById('tbody');
+    if (!d.data.length) {
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon"><i class="ti ti-file-invoice"></i></div><h3>暂无报价单</h3></div></td></tr>';
+    } else {
+        tbody.innerHTML = d.data.map(q => `<tr>
+            <td><a href="/quotations/${q.id}" class="fw-medium">${q.quotation_no}</a></td>
+            <td>${q.customer_name||'—'}</td>
+            <td class="text-success fw-medium">${formatCurrency(q.final_amount)}</td>
+            <td><span class="badge ${statusBadge[q.status]||'bg-secondary'}">${statusLabel[q.status]||q.status}</span></td>
+            <td>${q.valid_until||'—'}</td>
+            <td>${q.created_by_name||'—'}</td>
+            <td class="text-muted">${formatDate(q.created_at)}</td>
+            <td><a href="/quotations/${q.id}/edit" class="btn btn-sm btn-icon"><i class="ti ti-edit"></i></a></td>
+        </tr>`).join('');
+    }
+})();
+</script>
+{% endblock %}

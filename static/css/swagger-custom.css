@@ -1,0 +1,92 @@
+/* FastAPI CRM — Swagger UI 美化 */
+
+.swagger-ui .topbar {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 12px 0;
+}
+
+.swagger-ui .topbar .download-url-wrapper .select-label {
+    display: flex;
+    align-items: center;
+    color: #ffffff;
+}
+
+.swagger-ui .topbar .download-url-wrapper .select-label::before {
+    content: '🚀';
+    margin-right: 8px;
+    font-size: 1.2rem;
+}
+
+.swagger-ui .info .title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+.swagger-ui .info .description {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.swagger-ui .info .description table {
+    margin: 16px 0;
+}
+
+.swagger-ui .opblock-tag {
+    font-size: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 8px;
+}
+
+.swagger-ui .opblock-tag:hover {
+    background: rgba(32, 107, 196, 0.04);
+}
+
+.swagger-ui .btn.authorize {
+    background-color: #206bc4;
+    border-color: #206bc4;
+    color: white;
+}
+
+.swagger-ui .btn.authorize:hover {
+    background-color: #1a5aa8;
+}
+
+.swagger-ui .opblock.opblock-get {
+    border-color: #2fb344;
+    background: rgba(47, 179, 68, 0.04);
+}
+
+.swagger-ui .opblock.opblock-post {
+    border-color: #206bc4;
+    background: rgba(32, 107, 196, 0.04);
+}
+
+.swagger-ui .opblock.opblock-put {
+    border-color: #f59f00;
+    background: rgba(245, 159, 0, 0.04);
+}
+
+.swagger-ui .opblock.opblock-delete {
+    border-color: #d63939;
+    background: rgba(214, 57, 57, 0.04);
+}
+
+.swagger-ui section.models {
+    border: 1px solid #e8ecf1;
+    border-radius: 8px;
+}
+
+.swagger-ui .model-title {
+    font-size: 1rem;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+    .swagger-ui .topbar {
+        padding: 8px 0;
+    }
+    .swagger-ui .info .title {
+        font-size: 1.5rem;
+    }
+}

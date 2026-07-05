@@ -1,0 +1,55 @@
+{% extends "layouts/base.html" %}
+{% block title %}工单管理 — CRM{% endblock %}
+{% block page_title %}客户服务{% endblock %}
+{% block breadcrumb_active %}工单列表{% endblock %}
+{% block page_actions %}<a href="/tickets/create" class="btn btn-primary"><i class="ti ti-plus me-1"></i> 创建工单</a>{% endblock %}
+{% block content %}
+<div class="card"><div class="table-responsive">
+<table class="table table-vcenter card-table table-hover">
+    <thead><tr><th>工单编号</th><th>标题</th><th>类型</th><th>优先级</th><th>状态</th><th>评分</th><th>时间</th><th>操作</th></tr></thead>
+    <tbody id="tbody"><tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr></tbody>
+</table></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const API = '/api/v1/tickets';
+const pLabel = {low:'低',normal:'普通',high:'高',urgent:'紧急'};
+const pBadge = {low:'bg-secondary',normal:'bg-blue',high:'bg-orange',urgent:'bg-red'};
+const sLabel = {open:'待处理',processing:'处理中',resolved:'已解决',closed:'已关闭'};
+const sBadge = {open:'bg-blue',processing:'bg-yellow',resolved:'bg-green',closed:'bg-secondary'};
+const tLabel = {question:'问题咨询',complaint:'投诉',suggestion:'建议',repair:'维修',other:'其他'};
+
+async function load(){
+    const res = await fetch(API, {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
+    const d = (await res.json());
+    const tbody = document.getElementById('tbody');
+    if (!d.data.length) tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon"><i class="ti ti-ticket"></i></div><h3>暂无工单</h3></div></td></tr>';
+    else tbody.innerHTML = d.data.map(t => {
+        let actions = '';
+        if (t.status === 'open') actions = `<a href="#" class="btn btn-sm btn-outline-warning me-1" onclick="changeStatus(${t.id},'processing')">开始处理</a>`;
+        else if (t.status === 'processing') actions = `<a href="#" class="btn btn-sm btn-outline-success me-1" onclick="changeStatus(${t.id},'resolved')">标记解决</a>`;
+        if (t.status === 'open' || t.status === 'processing') actions += `<a href="#" class="btn btn-sm btn-outline-secondary" onclick="changeStatus(${t.id},'closed')">关闭</a>`;
+        if (t.status === 'resolved') actions = `<a href="#" class="btn btn-sm btn-outline-secondary" onclick="changeStatus(${t.id},'closed')">关闭</a>`;
+        if (!actions) actions = '<span class="text-muted small">已完成</span>';
+        return `<tr>
+            <td class="text-muted">${t.ticket_no}</td>
+            <td><span class="fw-medium">${escapeHtml(t.title)}</span></td>
+            <td>${tLabel[t.ticket_type]||t.ticket_type}</td>
+            <td><span class="badge ${pBadge[t.priority]||'bg-secondary'}">${pLabel[t.priority]||t.priority}</span></td>
+            <td><span class="badge ${sBadge[t.status]||'bg-secondary'}">${sLabel[t.status]||t.status}</span></td>
+            <td>${t.satisfaction_score ? '★'.repeat(t.satisfaction_score) : '—'}</td>
+            <td class="text-muted small">${formatDate(t.created_at)}</td>
+            <td>${actions}</td>
+        </tr>`;
+    }).join('');
+}
+
+async function changeStatus(id, status) {
+    const statusLabel = {processing:'开始处理',resolved:'已解决',closed:'关闭'};
+    await fetch(API + '/' + id, {method:'PUT', headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('access_token')}, body:JSON.stringify({status})});
+    load();
+}
+
+load();
+</script>
+{% endblock %}
