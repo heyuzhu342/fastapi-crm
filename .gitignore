@@ -43,3 +43,4 @@ Thumbs.db
 # Celery
 celerybeat-schedule
 celerybeat.pid
+/.claude
