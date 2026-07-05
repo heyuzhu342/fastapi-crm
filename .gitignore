@@ -44,3 +44,5 @@ Thumbs.db
 celerybeat-schedule
 celerybeat.pid
 /.claude
+/CLAUDE.md
+/.gitignore
