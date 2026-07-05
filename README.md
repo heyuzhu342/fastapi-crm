@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://www.mstarpackaging.com/" target="_blank">
-    <img src="static/img/logo.svg" width="120" alt="MSTAR Packaging">
+    <img src="logo.png" width="200" alt="MSTAR Packaging">
   </a>
 </p>
 
