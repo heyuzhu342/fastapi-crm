@@ -128,6 +128,17 @@ async def register_page(request: Request):
     return templates.TemplateResponse("pages/auth/register.html", {"request": request})
 
 
+# ── 个人资料 ──────────────────────────────────────
+@app.get("/profile", response_class=HTMLResponse)
+async def profile_page(request: Request):
+    return templates.TemplateResponse("pages/profile/index.html", {"request": request})
+
+
+@app.get("/profile/change-password", response_class=HTMLResponse)
+async def change_password_page(request: Request):
+    return templates.TemplateResponse("pages/profile/change-password.html", {"request": request})
+
+
 # ── 客户管理页面 ─────────────────────────────────
 @app.get("/customers", response_class=HTMLResponse, tags=["页面"], summary="客户列表")
 async def customers_list(request: Request):

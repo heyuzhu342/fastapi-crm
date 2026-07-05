@@ -1,0 +1,29 @@
+{% extends "layouts/base.html" %}
+{% block title %}个人资料 — CRM{% endblock %}
+{% block page_title %}个人资料{% endblock %}
+{% block breadcrumb_active %}个人资料{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-6"><div class="card"><div class="card-header"><h3 class="card-title">基本信息</h3></div>
+<div class="card-body" id="profile-content"><div class="text-center py-4"><div class="spinner-border text-primary"></div></div></div>
+</div></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+(async function(){
+    const res = await fetch('/api/v1/auth/me', {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
+    const u = (await res.json()).data;
+    document.getElementById('profile-content').innerHTML = `
+    <dl class="row mb-0">
+        <dt class="col-4">用户名</dt><dd class="col-8">${escapeHtml(u.username)}</dd>
+        <dt class="col-4">姓名</dt><dd class="col-8">${u.full_name||'—'}</dd>
+        <dt class="col-4">邮箱</dt><dd class="col-8">${u.email||'—'}</dd>
+        <dt class="col-4">手机号</dt><dd class="col-8">${u.phone||'—'}</dd>
+        <dt class="col-4">职位</dt><dd class="col-8">${u.position||'—'}</dd>
+        <dt class="col-4">角色</dt><dd class="col-8">${(u.roles||[]).map(r=>r.name).join(', ')||'—'}</dd>
+        <dt class="col-4">部门</dt><dd class="col-8">${u.department_id||'—'}</dd>
+        <dt class="col-4">最后登录</dt><dd class="col-8">${u.last_login_at ? formatDate(u.last_login_at) : '—'}</dd>
+        <dt class="col-4">注册时间</dt><dd class="col-8">${formatDate(u.created_at)}</dd>
+    </dl>`;
+})();
+</script>
+{% endblock %}
