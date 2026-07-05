@@ -46,3 +46,4 @@ celerybeat.pid
 /.claude
 /CLAUDE.md
 /.gitignore
+/tests
