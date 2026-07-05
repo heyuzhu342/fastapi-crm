@@ -1,12 +1,14 @@
-# FastAPI CRM
+<p align="center">
+  <a href="https://www.mstarpackaging.com/" target="_blank">
+    <img src="static/img/logo.svg" width="120" alt="MSTAR Packaging">
+  </a>
+</p>
 
-基于 **FastAPI + Jinja2 + Tabler** 构建的企业级 CRM 客户关系管理系统。
-
-## 公司信息
-
-<img src="static/img/logo.svg" width="48" height="48" alt="logo" align="right">
-
-**[MSTAR Packaging](https://www.mstarpackaging.com/)** — 专业包装解决方案提供商
+<h1 align="center">FastAPI CRM</h1>
+<p align="center">基于 <b>FastAPI + Jinja2 + Tabler</b> 构建的企业级 CRM 客户关系管理系统</p>
+<p align="center">
+  <a href="https://www.mstarpackaging.com/" target="_blank">🌐 MSTAR Packaging</a>
+</p>
 
 ## 功能模块
 
