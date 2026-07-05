@@ -2,7 +2,7 @@
 用户管理接口：CRUD、角色分配、部门管理
 """
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -48,20 +48,35 @@ async def list_users(
     if department_id is not None:
         filters["department_id"] = department_id
 
-    result = await user_crud.get_list(
-        db,
-        page=pagination["page"],
-        page_size=pagination["page_size"],
-        sort_by=pagination["sort_by"],
-        order=pagination["order"],
-        search=pagination["search"],
-        search_fields=["username", "full_name", "email", "phone"],
-        filters=filters,
-    )
+    # 重写查询以加载关联数据
+    query = select(User).options(joinedload(User.roles))
+    count_q = select(func.count(User.id))
 
-    # 格式化输出
+    if filters:
+        for f, v in filters.items():
+            if v is not None and hasattr(User, f):
+                col = getattr(User, f)
+                query = query.where(col == v)
+                count_q = count_q.where(col == v)
+
+    if pagination["search"]:
+        from sqlalchemy import or_
+        search_term = f"%{pagination['search']}%"
+        query = query.where(or_(User.username.like(search_term), User.full_name.like(search_term), User.email.like(search_term)))
+        count_q = count_q.where(or_(User.username.like(search_term), User.full_name.like(search_term), User.email.like(search_term)))
+
+    total_r = await db.execute(count_q)
+    total = total_r.scalar() or 0
+
+    sort_col = getattr(User, pagination["sort_by"], User.created_at)
+    query = query.order_by(sort_col.desc() if pagination["order"] == "desc" else sort_col.asc())
+    query = query.offset(pagination["offset"]).limit(pagination["page_size"])
+
+    result = await db.execute(query)
+    users = result.unique().scalars().all()
+
     items = []
-    for user in result["items"]:
+    for user in users:
         items.append(UserListOut(
             id=user.id,
             username=user.username,
@@ -74,17 +89,20 @@ async def list_users(
             is_superuser=user.is_superuser,
             last_login_at=user.last_login_at,
             created_at=user.created_at,
-            department_name=None,  # avoid lazy load
-            role_names=[]  # avoid lazy load,
+            english_name=user.english_name,
+            motto=user.motto,
+            department_name=None,
+            role_names=[r.name for r in user.roles] if user.roles else [],
         ))
 
+    total_pages = max(1, (total + pagination["page_size"] - 1) // pagination["page_size"])
     return ResponseList(
         data=items,
         meta={
-            "page": result["page"],
-            "page_size": result["page_size"],
-            "total": result["total"],
-            "total_pages": result["total_pages"],
+            "page": pagination["page"],
+            "page_size": pagination["page_size"],
+            "total": total,
+            "total_pages": total_pages,
         },
     )
 

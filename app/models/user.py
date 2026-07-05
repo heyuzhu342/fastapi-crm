@@ -70,8 +70,10 @@ class User(BaseModel):
     )
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False, comment="密码哈希")
     full_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, comment="姓名")
+    english_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, comment="英文名")
     phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, comment="手机号")
     avatar: Mapped[Optional[str]] = mapped_column(String(500), nullable=True, comment="头像URL")
+    motto: Mapped[Optional[str]] = mapped_column(String(500), nullable=True, comment="个性宣言")
     department_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("sys_department.id"), nullable=True, comment="部门ID"
     )

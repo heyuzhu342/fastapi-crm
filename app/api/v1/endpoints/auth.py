@@ -1,11 +1,14 @@
 """
-认证接口：登录、注册、刷新令牌、修改密码
+认证接口：登录、注册、刷新令牌、修改密码、头像上传
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+import os, uuid
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.config import settings
 from app.api.deps import get_current_user, oauth2_scheme
 from app.models.user import User
 from app.schemas.auth import (
@@ -133,7 +136,7 @@ async def update_profile(
     db: AsyncSession = Depends(get_db),
 ):
     """更新当前用户个人资料（邮箱、手机、姓名等）"""
-    allowed = {"email", "phone", "full_name", "position"}
+    allowed = {"email", "phone", "full_name", "position", "english_name", "motto"}
     for k, v in data.items():
         if k in allowed and v is not None:
             setattr(current_user, k, v)
@@ -154,6 +157,8 @@ async def get_current_user_info(
             "full_name": current_user.full_name,
             "phone": current_user.phone,
             "avatar": current_user.avatar,
+            "english_name": current_user.english_name,
+            "motto": current_user.motto,
             "position": current_user.position,
             "is_superuser": current_user.is_superuser,
             "is_active": current_user.is_active,
@@ -167,3 +172,25 @@ async def get_current_user_info(
             "created_at": current_user.created_at,
         }
     )
+
+
+@router.post("/upload-avatar", response_model=ResponseModel, summary="上传头像")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """上传用户头像"""
+    ext = os.path.splitext(file.filename)[1] or ".png"
+    filename = f"avatar_{current_user.id}_{uuid.uuid4().hex[:8]}{ext}"
+    upload_dir = os.path.join(settings.UPLOAD_DIR, "avatars")
+    os.makedirs(upload_dir, exist_ok=True)
+    filepath = os.path.join(upload_dir, filename)
+
+    content = await file.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+
+    current_user.avatar = f"/uploads/avatars/{filename}"
+    await db.flush()
+    return ResponseModel(data={"avatar": current_user.avatar}, message="头像上传成功")

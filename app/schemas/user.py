@@ -123,9 +123,11 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     email: Optional[str] = Field(default=None, max_length=100)
     full_name: Optional[str] = Field(default=None, max_length=100)
+    english_name: Optional[str] = Field(default=None, max_length=100)
     phone: Optional[str] = Field(default=None, max_length=20)
     department_id: Optional[int] = Field(default=None)
     position: Optional[str] = Field(default=None, max_length=100)
+    motto: Optional[str] = Field(default=None, max_length=500)
     is_active: Optional[bool] = Field(default=None)
     role_ids: Optional[List[int]] = Field(default=None, description="角色ID列表")
 
@@ -149,9 +151,11 @@ class UserListOut(BaseModel):
     id: int
     username: str
     full_name: Optional[str]
+    english_name: Optional[str] = None
     email: Optional[str]
     phone: Optional[str]
     avatar: Optional[str]
+    motto: Optional[str] = None
     position: Optional[str]
     is_active: bool
     is_superuser: bool

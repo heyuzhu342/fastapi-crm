@@ -76,6 +76,7 @@ app.add_middleware(AuditMiddleware)
 
 # ── 静态文件 & 模板 ──────────────────────────────
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 templates = Jinja2Templates(directory="templates")
 templates.env.globals["settings"] = settings

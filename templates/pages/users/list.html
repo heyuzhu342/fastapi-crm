@@ -4,10 +4,16 @@
 {% block breadcrumb_active %}用户列表{% endblock %}
 {% block page_actions %}<a href="/users/create" class="btn btn-primary"><i class="ti ti-plus me-1"></i>添加用户</a>{% endblock %}
 {% block content %}
-<div class="card"><div class="table-responsive">
-<table class="table table-vcenter card-table table-hover">
-    <thead><tr><th>用户名</th><th>姓名</th><th>邮箱</th><th>手机</th><th>角色</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
-    <tbody id="tbody"><tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr></tbody>
+<div class="card">
+<div class="table-responsive" style="overflow-x:auto">
+<table class="table table-vcenter card-table table-hover" style="min-width:1200px">
+    <thead><tr>
+        <th style="position:sticky;left:0;background:white;z-index:1">头像</th>
+        <th>用户名</th><th>姓名</th><th>英文名</th><th>邮箱</th><th>手机</th>
+        <th>职位</th><th>部门</th><th>角色</th><th>个性宣言</th><th>状态</th>
+        <th style="position:sticky;right:0;background:white;z-index:1">操作</th>
+    </tr></thead>
+    <tbody id="tbody"><tr><td colspan="12" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr></tbody>
 </table></div>
 <div class="card-footer d-flex"><p class="m-0 text-muted" id="info"></p><ul class="pagination m-0 ms-auto" id="pager"></ul></div>
 </div>
@@ -19,13 +25,16 @@ async function load(p={}){
     const res = await fetch('/api/v1/users'+(qs?'?'+qs:''), {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
     const d = (await res.json());
     document.getElementById('tbody').innerHTML = d.data.map(u => `<tr>
+        <td style="position:sticky;left:0;background:white"><span class="avatar avatar-sm rounded" style="background-image:url(${u.avatar||'/static/img/avatar-default.svg'})"></span></td>
         <td><span class="fw-medium">${escapeHtml(u.username)}</span></td>
-        <td>${u.full_name||'—'}</td><td>${u.email||'—'}</td><td>${u.phone||'—'}</td>
+        <td>${u.full_name||'—'}</td><td>${u.english_name||'—'}</td>
+        <td>${u.email||'—'}</td><td>${u.phone||'—'}</td>
+        <td>${u.position||'—'}</td><td>${u.department_name||'—'}</td>
         <td>${(u.role_names||[]).join(', ')||'—'}</td>
+        <td><small class="text-muted" style="max-width:120px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.motto||'—'}</small></td>
         <td>${u.is_active?'<span class="badge bg-success">启用</span>':'<span class="badge bg-danger">禁用</span>'}</td>
-        <td class="text-muted">${formatDate(u.created_at)}</td>
-        <td><a href="/users/${u.id}/edit" class="btn btn-sm btn-outline-primary me-1">编辑</a><a href="#" class="text-danger" onclick="del(${u.id})">删除</a></td>
-    </tr>`).join('') || '<tr><td colspan="8" class="text-muted text-center">暂无用户</td></tr>';
+        <td style="position:sticky;right:0;background:white"><a href="/users/${u.id}/edit" class="btn btn-sm btn-outline-primary me-1">编辑</a><a href="#" class="text-danger" onclick="del(${u.id})">删除</a></td>
+    </tr>`).join('') || '<tr><td colspan="12" class="text-muted text-center">暂无用户</td></tr>';
     document.getElementById('info').textContent = `共 ${d.meta.total} 条`;
     let h=''; for(let i=1;i<=d.meta.total_pages;i++) h+=`<li class="page-item ${i===d.meta.page?'active':''}"><a class="page-link" href="#" onclick="load({page:${i}})">${i}</a></li>`;
     document.getElementById('pager').innerHTML = h;
