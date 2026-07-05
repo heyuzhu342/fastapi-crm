@@ -3,27 +3,62 @@
 {% block page_title %}个人资料{% endblock %}
 {% block breadcrumb_active %}个人资料{% endblock %}
 {% block content %}
-<div class="row"><div class="col-lg-6"><div class="card"><div class="card-header"><h3 class="card-title">基本信息</h3></div>
-<div class="card-body" id="profile-content"><div class="text-center py-4"><div class="spinner-border text-primary"></div></div></div>
-</div></div></div>
+<div class="row"><div class="col-lg-6"><div class="card"><div class="card-header d-flex align-items-center"><h3 class="card-title">基本信息</h3>
+<button class="btn btn-sm btn-outline-primary ms-auto" id="btn-edit" onclick="toggleEdit()"><i class="ti ti-edit me-1"></i>编辑</button></div>
+<div class="card-body">
+<form id="form"><div id="content"><div class="text-center py-4"><div class="spinner-border text-primary"></div></div></div>
+<div id="edit-actions" class="d-none mt-3">
+    <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i>保存</button>
+    <button type="button" class="btn btn-outline-secondary ms-2" onclick="toggleEdit()">取消</button>
+</div></form>
+<div id="msg" class="alert d-none mt-3"></div>
+</div></div></div></div>
 {% endblock %}
 {% block scripts %}
 <script>
-(async function(){
+let userData = null;
+
+async function load(){
     const res = await fetch('/api/v1/auth/me', {headers:{Authorization:'Bearer '+localStorage.getItem('access_token')}});
-    const u = (await res.json()).data;
-    document.getElementById('profile-content').innerHTML = `
-    <dl class="row mb-0">
+    userData = (await res.json()).data;
+    render(false);
+}
+
+function render(editing){
+    const u = userData;
+    const html = `<dl class="row mb-0">
         <dt class="col-4">用户名</dt><dd class="col-8">${escapeHtml(u.username)}</dd>
-        <dt class="col-4">姓名</dt><dd class="col-8">${u.full_name||'—'}</dd>
-        <dt class="col-4">邮箱</dt><dd class="col-8">${u.email||'—'}</dd>
-        <dt class="col-4">手机号</dt><dd class="col-8">${u.phone||'—'}</dd>
-        <dt class="col-4">职位</dt><dd class="col-8">${u.position||'—'}</dd>
+        <dt class="col-4">姓名</dt><dd class="col-8">${editing?`<input class="form-control form-control-sm" name="full_name" value="${escapeHtml(u.full_name||'')}">`:escapeHtml(u.full_name||'—')}</dd>
+        <dt class="col-4">邮箱</dt><dd class="col-8">${editing?`<input class="form-control form-control-sm" name="email" value="${u.email||''}">`:u.email||'—'}</dd>
+        <dt class="col-4">手机号</dt><dd class="col-8">${editing?`<input class="form-control form-control-sm" name="phone" value="${u.phone||''}">`:u.phone||'—'}</dd>
+        <dt class="col-4">职位</dt><dd class="col-8">${editing?`<input class="form-control form-control-sm" name="position" value="${escapeHtml(u.position||'')}">`:escapeHtml(u.position||'—')}</dd>
         <dt class="col-4">角色</dt><dd class="col-8">${(u.roles||[]).map(r=>r.name).join(', ')||'—'}</dd>
-        <dt class="col-4">部门</dt><dd class="col-8">${u.department_id||'—'}</dd>
-        <dt class="col-4">最后登录</dt><dd class="col-8">${u.last_login_at ? formatDate(u.last_login_at) : '—'}</dd>
+        <dt class="col-4">部门</dt><dd class="col-8">${u.department_name||'—'}</dd>
+        <dt class="col-4">最后登录</dt><dd class="col-8">${u.last_login_at?formatDate(u.last_login_at):'—'}</dd>
         <dt class="col-4">注册时间</dt><dd class="col-8">${formatDate(u.created_at)}</dd>
     </dl>`;
-})();
+    document.getElementById('content').innerHTML = html;
+    document.getElementById('edit-actions').className = editing ? 'mt-3' : 'd-none mt-3';
+    document.getElementById('btn-edit').className = editing ? 'd-none' : 'btn btn-sm btn-outline-primary ms-auto';
+}
+
+function toggleEdit(){
+    const editing = document.getElementById('edit-actions').className !== 'd-none mt-3';
+    if (editing) { render(false); return; }
+    render(true);
+}
+
+document.getElementById('form').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const msg = document.getElementById('msg');
+    const fd = new FormData(this);
+    const data = {};
+    for (let [k,v] of fd) { if (v) data[k] = v; }
+    const res = await fetch('/api/v1/auth/me', {method:'PUT', headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('access_token')}, body:JSON.stringify(data)});
+    if (res.ok) { msg.textContent='保存成功'; msg.className='alert alert-success'; load(); }
+    else { const d=await res.json(); msg.textContent=d.detail||d.message||'保存失败'; msg.className='alert alert-danger'; }
+});
+
+load();
 </script>
 {% endblock %}

@@ -48,7 +48,7 @@ async def get_current_user(
     # 加载用户和角色（避免后续 lazy load 产生 greenlet 错误）
     result = await db.execute(
         select(User)
-        .options(joinedload(User.roles))
+        .options(joinedload(User.roles), joinedload(User.department))
         .where(User.id == int(user_id))
     )
     user = result.unique().scalar_one_or_none()

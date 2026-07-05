@@ -126,6 +126,21 @@ async def change_password(
     return ResponseModel(message="密码修改成功")
 
 
+@router.put("/me", response_model=ResponseModel, summary="更新个人资料")
+async def update_profile(
+    data: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """更新当前用户个人资料（邮箱、手机、姓名等）"""
+    allowed = {"email", "phone", "full_name", "position"}
+    for k, v in data.items():
+        if k in allowed and v is not None:
+            setattr(current_user, k, v)
+    await db.flush()
+    return ResponseModel(data={"id": current_user.id, "username": current_user.username}, message="个人资料已更新")
+
+
 @router.get("/me", response_model=ResponseModel[dict], summary="获取当前用户信息")
 async def get_current_user_info(
     current_user: User = Depends(get_current_user),
@@ -143,6 +158,7 @@ async def get_current_user_info(
             "is_superuser": current_user.is_superuser,
             "is_active": current_user.is_active,
             "department_id": current_user.department_id,
+            "department_name": current_user.department.name if current_user.department else None,
             "roles": [
                 {"id": r.id, "name": r.name, "code": r.code}
                 for r in current_user.roles
