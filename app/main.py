@@ -268,6 +268,14 @@ async def reports_page(request: Request):
 async def users_list_page(request: Request):
     return templates.TemplateResponse("pages/users/list.html", {"request": request})
 
+@app.get("/users/create", response_class=HTMLResponse)
+async def users_create_page(request: Request):
+    return templates.TemplateResponse("pages/users/form.html", {"request": request})
+
+@app.get("/users/{user_id}/edit", response_class=HTMLResponse)
+async def users_edit_page(request: Request, user_id: int):
+    return templates.TemplateResponse("pages/users/form.html", {"request": request})
+
 @app.get("/users/roles", response_class=HTMLResponse)
 async def users_roles(request: Request):
     return templates.TemplateResponse("pages/users/roles.html", {"request": request})
