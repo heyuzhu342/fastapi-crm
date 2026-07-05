@@ -107,7 +107,15 @@ async def get_user(
     user = result.unique().scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=404, detail="用户不存在")
-    return ResponseModel(data=UserOut.model_validate(user))
+    return ResponseModel(data={
+        "id": user.id, "username": user.username, "email": user.email,
+        "full_name": user.full_name, "phone": user.phone, "avatar": user.avatar,
+        "position": user.position, "is_active": user.is_active, "is_superuser": user.is_superuser,
+        "department_id": user.department_id, "department_name": user.department.name if user.department else None,
+        "roles": [{"id": r.id, "name": r.name, "code": r.code} for r in user.roles],
+        "last_login_at": str(user.last_login_at) if user.last_login_at else None,
+        "created_at": str(user.created_at), "updated_at": str(user.updated_at),
+    })
 
 
 @router.post("", response_model=ResponseModel, summary="创建用户")

@@ -24,7 +24,7 @@ def generate_quotation_no() -> str:
     return f"QTN-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
 
 
-@router.get("", response_model=ResponseList[QuotationOut], summary="报价单列表")
+@router.get("", response_model=ResponseList, summary="报价单列表")
 async def list_quotations(
     pagination: dict = Depends(pagination_params),
     status: str = None, customer_id: int = None,
@@ -41,7 +41,9 @@ async def list_quotations(
         search=pagination["search"], search_fields=["quotation_no"],
         filters=filters,
     )
-    items = [QuotationOut.model_validate(q) for q in result["items"]]
+    items = [{"id": q.id, "quotation_no": q.quotation_no, "customer_id": q.customer_id,
+              "total_amount": str(q.total_amount), "final_amount": str(q.final_amount),
+              "status": q.status, "created_at": str(q.created_at)} for q in result["items"]]
     return ResponseList(data=items, meta={
         "page": result["page"], "page_size": result["page_size"],
         "total": result["total"], "total_pages": result["total_pages"],
